@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CCS Content Authoring — Discovery Dashboard</title>
+
+<!-- 1. Theme detection (mandatory Clawpilot) -->
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const stored = localStorage.getItem("ccs.theme");
+    const theme = param || stored ||
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+
+<style>
+  /* 2. Clawpilot variables — verbatim */
+  :root {
+    color-scheme: light;
+    --cp-bg: #f7f4ef;
+    --cp-bg-elevated: #fcfbf8;
+    --cp-surface: #ffffff;
+    --cp-surface-soft: #f5f5f5;
+    --cp-border: #dedede;
+    --cp-border-strong: #919191;
+    --cp-text: #242424;
+    --cp-text-muted: #5c5c5c;
+    --cp-text-soft: #6f6f6f;
+    --cp-accent: #b11f4b;
+    --cp-accent-hover: #9a1a41;
+    --cp-accent-soft: rgba(177, 31, 75, 0.08);
+    --cp-accent-fg: #ffffff;
+    --cp-success: #16a34a;
+    --cp-danger: #dc2626;
+    --cp-warning: #f59e0b;
+    --cp-link: #0078d4;
+    --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+    --cp-overlay: rgba(255, 255, 255, 0.8);
+    --cp-panel: rgba(255, 255, 255, 0.86);
+    --cp-panel-strong: rgba(255, 255, 255, 0.96);
+    --cp-sheen: rgba(255, 255, 255, 0.55);
+    --cp-highlight: rgba(177, 31, 75, 0.12);
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --cp-bg: #3d3b3a;
+    --cp-bg-elevated: #343231;
+    --cp-surface: #292929;
+    --cp-surface-soft: #2e2e2e;
+    --cp-border: #474747;
+    --cp-border-strong: #5f5f5f;
+    --cp-text: #dedede;
+    --cp-text-muted: #919191;
+    --cp-text-soft: #b0b0b0;
+    --cp-accent: #fd8ea1;
+    --cp-accent-hover: #fb7b91;
+    --cp-accent-soft: rgba(253, 142, 161, 0.14);
+    --cp-accent-fg: #1a1a1a;
+    --cp-success: #4ade80;
+    --cp-danger: #f87171;
+    --cp-warning: #fbbf24;
+    --cp-link: #4da6ff;
+    --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+    --cp-overlay: rgba(41, 41, 41, 0.88);
+    --cp-panel: rgba(41, 41, 41, 0.72);
+    --cp-panel-strong: rgba(41, 41, 41, 0.96);
+    --cp-sheen: rgba(255, 255, 255, 0.04);
+    --cp-highlight: rgba(253, 142, 161, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--cp-bg);
+    color: var(--cp-text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre { font-family: Consolas, "Courier New", Courier, monospace; }
+  a { color: var(--cp-link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ---- Header ---- */
+  header.app {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--cp-panel-strong);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--cp-border);
+  }
+  .header-row {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.85rem 1.5rem;
+  }
+  .brand { display: flex; align-items: baseline; gap: 0.75rem; flex: 1; min-width: 0; }
+  .brand h1 {
+    margin: 0;
+    font-size: 1.05rem; font-weight: 600;
+    color: var(--cp-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .brand .sub {
+    color: var(--cp-text-muted); font-size: 0.85rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+  button.btn, label.btn {
+    font-family: inherit; font-size: 0.85rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.625rem;
+    border: 1px solid var(--cp-border);
+    background: var(--cp-surface); color: var(--cp-text);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  button.btn:hover, label.btn:hover {
+    background: var(--cp-surface-soft);
+    border-color: var(--cp-border-strong);
+  }
+  button.btn.primary, label.btn.primary {
+    background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent);
+  }
+  button.btn.primary:hover, label.btn.primary:hover { background: var(--cp-accent-hover); border-color: var(--cp-accent-hover); }
+  button.btn.danger { color: var(--cp-danger); border-color: var(--cp-border); }
+  button.btn.icon { padding: 0.35rem 0.55rem; }
+
+  /* ---- Tabs ---- */
+  nav.tabs {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; gap: 0.25rem;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--cp-border);
+    overflow-x: auto;
+  }
+  nav.tabs button {
+    background: transparent; border: 0;
+    color: var(--cp-text-muted);
+    font-family: inherit; font-size: 0.9rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  nav.tabs button:hover { color: var(--cp-text); }
+  nav.tabs button.active {
+    color: var(--cp-accent);
+    border-bottom-color: var(--cp-accent);
+    font-weight: 600;
+  }
+
+  /* ---- Layout ---- */
+  main { max-width: 1280px; margin: 0 auto; padding: 1.5rem; }
+  .panel {
+    background: var(--cp-surface);
+    border: 1px solid var(--cp-border);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  }
+  .panel h2 { margin: 0 0 0.75rem 0; font-size: 1.05rem; font-weight: 600; color: var(--cp-text); }
+  .panel p.lead { color: var(--cp-text-muted); margin: 0 0 1rem 0; }
+
+  .pillar-pill { display: inline-block; font-size: 0.72rem; padding: 0.1rem 0.5rem;
+    border-radius: 999px; background: var(--cp-accent-soft); color: var(--cp-accent); border: 1px solid var(--cp-accent-soft); }
+
+  /* ---- Stats strip ---- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+  .stat {
+    background: var(--cp-surface);
+    border: 1px solid var(--cp-border);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+  }
+  .stat .label { font-size: 0.75rem; color: var(--cp-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat .value { font-size: 1.4rem; font-weight: 600; color: var(--cp-text); margin-top: 0.25rem; }
+  .stat .delta { font-size: 0.75rem; color: var(--cp-text-soft); }
+
+  /* ---- Cards (persona snapshot) ---- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+  .card {
+    background: var(--cp-bg-elevated);
+    border: 1px solid var(--cp-border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .card h3 { margin: 0; font-size: 0.95rem; color: var(--cp-accent); }
+  .card .role { color: var(--cp-text-muted); font-size: 0.85rem; }
+  .card .field { font-size: 0.85rem; }
+  .card .field strong { color: var(--cp-text); }
+  .card .field span { color: var(--cp-text-muted); }
+  .card textarea, .card input[type=text] {
+    width: 100%; font-family: inherit; font-size: 0.85rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 8px;
+    border: 1px solid var(--cp-border);
+    background: var(--cp-surface);
+    color: var(--cp-text);
+    resize: vertical;
+  }
+  .card textarea:focus, .card input:focus { outline: 2px solid var(--cp-accent-soft); border-color: var(--cp-accent); }
+
+  /* ---- Heat-map ---- */
+  .matrix-wrap { overflow-x: auto; margin-top: 0.5rem; }
+  table.matrix { border-collapse: separate; border-spacing: 6px; min-width: 100%; }
+  table.matrix th, table.matrix td {
+    padding: 0; text-align: center; vertical-align: middle;
+    font-size: 0.85rem;
+  }
+  table.matrix th.row-head, table.matrix th.col-head {
+    background: var(--cp-surface-soft);
+    color: var(--cp-text);
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    min-width: 120px;
+    font-weight: 600;
+  }
+  table.matrix th.row-head { text-align: left; }
+  .cell {
+    width: 100%; min-height: 64px;
+    border-radius: 10px;
+    border: 1px solid var(--cp-border);
+    background: var(--cp-surface);
+    color: var(--cp-text);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    transition: transform 0.12s, box-shadow 0.12s;
+    user-select: none;
+  }
+  .cell:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+  .cell.h { background: var(--cp-danger); color: #fff; border-color: transparent; }
+  .cell.m { background: var(--cp-warning); color: #1a1a1a; border-color: transparent; }
+  .cell.l { background: var(--cp-success); color: #fff; border-color: transparent; }
+  .cell.empty { background: var(--cp-surface-soft); color: var(--cp-text-muted); }
+  .legend { display: flex; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--cp-text-muted); flex-wrap: wrap; }
+  .legend .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: middle; margin-right: 0.35rem; }
+
+  /* ---- Tables (generic) ---- */
+  table.data { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  table.data th, table.data td {
+    text-align: left; vertical-align: top;
+    padding: 0.6rem 0.65rem;
+    border-bottom: 1px solid var(--cp-border);
+    font-size: 0.88rem;
+  }
+  table.data th { color: var(--cp-text-muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  table.data tr:hover td { background: var(--cp-surface-soft); }
+  table.data input[type=text], table.data textarea, table.data select {
+    width: 100%; font-family: inherit; font-size: 0.85rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--cp-text);
+  }
+  table.data input:focus, table.data textarea:focus, table.data select:focus {
+    background: var(--cp-surface);
+    border-color: var(--cp-accent);
+    outline: none;
+  }
+  table.data textarea { resize: vertical; min-height: 2.2rem; }
+  .row-actions { white-space: nowrap; }
+  .row-actions button { padding: 0.25rem 0.45rem; font-size: 0.75rem; }
+
+  .toolbar { display: flex; gap: 0.5rem; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; flex-wrap: wrap; }
+  .toolbar .right { display: flex; gap: 0.5rem; }
+  .tag-h { color: var(--cp-danger); font-weight: 600; }
+  .tag-m { color: var(--cp-warning); font-weight: 600; }
+  .tag-l { color: var(--cp-success); font-weight: 600; }
+
+  /* ---- Opportunity scatter ---- */
+  .scatter { position: relative; width: 100%; max-width: 520px; aspect-ratio: 1/1; margin: 0.75rem auto;
+    background: var(--cp-surface-soft); border: 1px solid var(--cp-border); border-radius: 12px; }
+  .scatter .axis-x, .scatter .axis-y { position: absolute; color: var(--cp-text-muted); font-size: 0.72rem; }
+  .scatter .axis-x { left: 0; right: 0; bottom: -1.4rem; text-align: center; }
+  .scatter .axis-y { top: 50%; left: -2.6rem; transform: rotate(-90deg) translateX(0); transform-origin: right top; }
+  .scatter .quad-line { position: absolute; background: var(--cp-border); }
+  .scatter .quad-line.h { left: 0; right: 0; top: 50%; height: 1px; }
+  .scatter .quad-line.v { top: 0; bottom: 0; left: 50%; width: 1px; }
+  .scatter .dot {
+    position: absolute; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--cp-accent); color: var(--cp-accent-fg);
+    transform: translate(-50%, -50%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    cursor: pointer;
+  }
+  .scatter .label-tl, .scatter .label-tr, .scatter .label-bl, .scatter .label-br {
+    position: absolute; font-size: 0.7rem; color: var(--cp-text-muted); padding: 0.2rem 0.4rem;
+  }
+  .label-tl { top: 0.25rem; left: 0.4rem; }
+  .label-tr { top: 0.25rem; right: 0.4rem; color: var(--cp-accent); font-weight: 600; }
+  .label-bl { bottom: 0.25rem; left: 0.4rem; }
+  .label-br { bottom: 0.25rem; right: 0.4rem; }
+
+  .hint { font-size: 0.78rem; color: var(--cp-text-muted); margin-top: 0.4rem; }
+
+  .save-indicator { font-size: 0.75rem; color: var(--cp-text-soft); margin-left: 0.5rem; }
+  .save-indicator.saving { color: var(--cp-warning); }
+  .save-indicator.saved { color: var(--cp-success); }
+
+  details { margin-top: 0.5rem; }
+  summary { cursor: pointer; color: var(--cp-text-muted); font-size: 0.85rem; padding: 0.35rem 0; }
+  summary:hover { color: var(--cp-text); }
+
+  .empty-state {
+    padding: 2rem; text-align: center;
+    color: var(--cp-text-muted);
+    border: 1px dashed var(--cp-border);
+    border-radius: 12px;
+  }
+
+  @media print {
+    nav.tabs, header.app .header-actions, .toolbar button, .row-actions { display: none !important; }
+    .panel { break-inside: avoid; box-shadow: none; }
+    .tab-pane { display: block !important; }
+    .tab-pane + .tab-pane { page-break-before: always; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="header-row">
+    <div class="brand">
+      <h1>CCS Content Authoring — Discovery Dashboard</h1>
+      <span class="sub" id="subTitle">Live source of truth · auto-saved locally</span>
+    </div>
+    <div class="header-actions">
+      <span class="save-indicator" id="saveIndicator">Loaded</span>
+      <button class="btn" id="themeToggle" title="Toggle light/dark">◐ Theme</button>
+      <button class="btn" id="exportBtn" title="Download findings as JSON">⬇ Export</button>
+      <label class="btn" for="importInput" title="Load findings from JSON">⬆ Import</label>
+      <input id="importInput" type="file" accept="application/json" hidden />
+      <button class="btn" id="printBtn" title="Print or save as PDF">🖨 Print</button>
+      <button class="btn danger" id="resetBtn" title="Reset all to defaults">↺ Reset</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+
+<main>
+  <div class="stats" id="statsStrip"></div>
+  <div id="tabPanes"></div>
+</main>
+
+<script>
+// ============================================================
+// Data model + defaults
+// ============================================================
+const STORAGE_KEY = "ccs.discovery.v1";
+
+const PERSONAS = [
+  { key: "tech_se", title: "CSS Tech SE", role: "Tech Support Engineer / EEE", poc: "A&I Winncomm",
+    audience: "Internal SE", authoring: "Rubik", publish: "Evergreen, CSS Wiki" },
+  { key: "km_lead", title: "CSS KM Lead", role: "Tech Support Engineer / EEE (KM lens)", poc: "MW",
+    audience: "Internal SE org-wide", authoring: "CSS Wiki", publish: "CSS Wiki" },
+  { key: "publish_mgr", title: "Content Publish Manager", role: "Content creator & publisher (external)", poc: "S&O",
+    audience: "External customers", authoring: "Content Mentor / VS Code", publish: "LMC, SMC" },
+  { key: "ai_creator", title: "AI Content Creator", role: "Automated harvester of case-closure notes", poc: "(confirm)",
+    audience: "Internal AAQ users", authoring: "Automation pipeline", publish: "Cornerstone AAQ" },
+];
+
+const PILLARS = [
+  { key: "health", title: "Content Health", goal: "Inventory, freshness, quality" },
+  { key: "creation", title: "Content Creation", goal: "AI drafting, KMA harvesting" },
+  { key: "idea_engine", title: "Content Idea Engine", goal: "Customer demand, support cases, search failures, trends, business strategy" },
+  { key: "performance", title: "Content Performance", goal: "Analytics, golden datasets" },
+  { key: "maintenance", title: "Content Maintenance", goal: "Updates, ownership, lifecycle" },
+  { key: "governance", title: "Content Governance", goal: "Metadata, standards, AI readiness" },
+];
+
+const LIFECYCLE_STAGES = [
+  "Ideation / intake",
+  "Drafting",
+  "Editing / refining",
+  "Compliance / brand / SEO / accessibility",
+  "Review & approval",
+  "Publishing",
+  "Performance & analytics",
+  "Maintenance & retirement",
+];
+
+function emptyMatrix(rows, cols) {
+  const m = {};
+  rows.forEach(r => { m[r] = {}; cols.forEach(c => { m[r][c] = ""; }); });
+  return m;
+}
+
+const DEFAULT_STATE = {
+  meta: {
+    owner: "Sony Manay (PM)",
+    window: "",
+    interviewsDone: 0,
+    version: "v1.0",
+    visionDraft: "One unified authoring experience that enables every CCS persona to ideate, draft, govern, publish, and improve content across internal and external surfaces — with AI assistance, shared metadata, and closed-loop performance signals.",
+  },
+  personas: PERSONAS.map(p => ({
+    ...p,
+    interviewed: false,
+    topPain: "",
+    topOpportunity: "",
+    confidence: "",
+    quotes: "",
+  })),
+  pillarMatrix: emptyMatrix(PILLARS.map(p => p.key), PERSONAS.map(p => p.key)),
+  lifecycleMatrix: emptyMatrix(LIFECYCLE_STAGES, PERSONAS.map(p => p.key)),
+  themes: [
+    { id: rid(), theme: "", personas: "", mentions: "", pillar: "", priority: "" },
+  ],
+  opportunities: [
+    { id: rid(), title: "", personas: "", pillar: "", impact: "M", effort: "M", owner: "", next: "" },
+  ],
+  decisions: [
+    { id: rid(), decision: "", options: "", recommendation: "", owner: "", due: "" },
+  ],
+  nextSteps: [
+    { id: rid(), action: "", owner: "", due: "" },
+  ],
+};
+
+function rid() { return Math.random().toString(36).slice(2, 10); }
+
+// ============================================================
+// State management
+// ============================================================
+let state = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    return mergeDefaults(structuredClone(DEFAULT_STATE), parsed);
+  } catch (e) {
+    console.warn("Failed to load state:", e);
+    return structuredClone(DEFAULT_STATE);
+  }
+}
+function mergeDefaults(base, override) {
+  for (const k of Object.keys(override || {})) {
+    if (override[k] && typeof override[k] === "object" && !Array.isArray(override[k])) {
+      base[k] = mergeDefaults(base[k] || {}, override[k]);
+    } else {
+      base[k] = override[k];
+    }
+  }
+  return base;
+}
+let saveTimer;
+function save() {
+  const ind = document.getElementById("saveIndicator");
+  ind.textContent = "Saving…"; ind.className = "save-indicator saving";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      ind.textContent = "Saved · " + new Date().toLocaleTimeString();
+      ind.className = "save-indicator saved";
+    } catch (e) {
+      ind.textContent = "Save failed";
+      ind.className = "save-indicator";
+    }
+  }, 250);
+}
+
+// ============================================================
+// Tabs
+// ============================================================
+const TABS = [
+  { key: "overview",  label: "Overview" },
+  { key: "personas",  label: "Personas" },
+  { key: "heatmap",   label: "Pillar × Persona" },
+  { key: "lifecycle", label: "Lifecycle × Persona" },
+  { key: "themes",    label: "Themes" },
+  { key: "opps",      label: "Opportunities" },
+  { key: "decisions", label: "Decisions & Next Steps" },
+];
+
+let activeTab = location.hash ? location.hash.slice(1) : "overview";
+if (!TABS.find(t => t.key === activeTab)) activeTab = "overview";
+
+function renderTabs() {
+  const nav = document.getElementById("tabs");
+  nav.innerHTML = "";
+  TABS.forEach(t => {
+    const b = document.createElement("button");
+    b.textContent = t.label;
+    if (t.key === activeTab) b.classList.add("active");
+    b.addEventListener("click", () => {
+      activeTab = t.key;
+      location.hash = t.key;
+      renderTabs();
+      renderActivePane();
+    });
+    nav.appendChild(b);
+  });
+}
+
+// ============================================================
+// Stats strip
+// ============================================================
+function renderStats() {
+  const total = state.personas.length;
+  const interviewed = state.personas.filter(p => p.interviewed).length;
+  const themes = state.themes.filter(t => t.theme.trim()).length;
+  const opps = state.opportunities.filter(o => o.title.trim()).length;
+
+  const heatCount = countHeat(state.pillarMatrix) + countHeat(state.lifecycleMatrix);
+  const stats = [
+    { label: "Personas covered", value: `${interviewed}/${total}` },
+    { label: "Themes captured", value: themes },
+    { label: "Opportunities", value: opps },
+    { label: "Heat-map cells filled", value: heatCount },
+    { label: "Interviews done", value: state.meta.interviewsDone || 0 },
+  ];
+  const wrap = document.getElementById("statsStrip");
+  wrap.innerHTML = stats.map(s => `
+    <div class="stat">
+      <div class="label">${esc(s.label)}</div>
+      <div class="value">${esc(String(s.value))}</div>
+    </div>`).join("");
+}
+function countHeat(m) {
+  let n = 0;
+  Object.values(m).forEach(row => Object.values(row).forEach(v => { if (v) n++; }));
+  return n;
+}
+
+// ============================================================
+// Render dispatch
+// ============================================================
+function renderActivePane() {
+  const wrap = document.getElementById("tabPanes");
+  wrap.innerHTML = "";
+  switch (activeTab) {
+    case "overview":  wrap.appendChild(renderOverview()); break;
+    case "personas":  wrap.appendChild(renderPersonas()); break;
+    case "heatmap":   wrap.appendChild(renderHeatmap()); break;
+    case "lifecycle": wrap.appendChild(renderLifecycle()); break;
+    case "themes":    wrap.appendChild(renderThemes()); break;
+    case "opps":      wrap.appendChild(renderOpps()); break;
+    case "decisions": wrap.appendChild(renderDecisions()); break;
+  }
+  renderStats();
+}
+
+// ============================================================
+// Helpers (DOM + escaping)
+// ============================================================
+function el(tag, attrs = {}, children = []) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k === "html") n.innerHTML = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  (Array.isArray(children) ? children : [children]).forEach(c => {
+    if (c == null) return;
+    n.appendChild(c instanceof Node ? c : document.createTextNode(String(c)));
+  });
+  return n;
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function panel(titleText, leadText) {
+  const p = el("div", { class: "panel" });
+  p.appendChild(el("h2", { text: titleText }));
+  if (leadText) p.appendChild(el("p", { class: "lead", text: leadText }));
+  return p;
+}
+
+// ============================================================
+// Tab: Overview
+// ============================================================
+function renderOverview() {
+  const wrap = document.createElement("div");
+
+  const metaPanel = panel("Project metadata", "Top-of-funnel context for everyone reading this dashboard.");
+  const grid = el("div", { class: "cards" });
+  grid.appendChild(textCard("Owner (PM)", state.meta.owner, v => { state.meta.owner = v; save(); }));
+  grid.appendChild(textCard("Interview window", state.meta.window, v => { state.meta.window = v; save(); }, "e.g. Jun 10 – Jul 5"));
+  grid.appendChild(numberCard("Interviews done", state.meta.interviewsDone, v => { state.meta.interviewsDone = v; save(); renderStats(); }));
+  grid.appendChild(textCard("Version", state.meta.version, v => { state.meta.version = v; save(); }));
+  metaPanel.appendChild(grid);
+  wrap.appendChild(metaPanel);
+
+  const visionPanel = panel("Vision statement", "Refine after each interview round. This is the single source of truth shared with the team.");
+  const ta = el("textarea", { rows: 4 });
+  ta.value = state.meta.visionDraft || "";
+  ta.style.width = "100%"; ta.style.fontFamily = "inherit"; ta.style.fontSize = "0.95rem";
+  ta.style.padding = "0.75rem"; ta.style.borderRadius = "10px";
+  ta.style.border = "1px solid var(--cp-border)"; ta.style.background = "var(--cp-surface)"; ta.style.color = "var(--cp-text)";
+  ta.addEventListener("input", () => { state.meta.visionDraft = ta.value; save(); });
+  visionPanel.appendChild(ta);
+  wrap.appendChild(visionPanel);
+
+  // Persona snapshot
+  const snapshot = panel("Persona snapshot", "Top pain & top opportunity per persona. Click cells to edit.");
+  const cards = el("div", { class: "cards" });
+  state.personas.forEach((p, idx) => {
+    const card = el("div", { class: "card" });
+    card.appendChild(el("h3", { text: p.title }));
+    card.appendChild(el("div", { class: "role", text: p.role }));
+    card.appendChild(el("div", { class: "field", html: `<strong>POC:</strong> <span>${esc(p.poc)}</span>` }));
+    card.appendChild(el("div", { class: "field", html: `<strong>Publish:</strong> <span>${esc(p.publish)}</span>` }));
+
+    const checkbox = el("label", { class: "field" }, [
+      Object.assign(document.createElement("input"), {
+        type: "checkbox", checked: !!p.interviewed,
+        onchange: e => { state.personas[idx].interviewed = e.target.checked; save(); renderStats(); }
+      }),
+      document.createTextNode(" Interviewed"),
+    ]);
+    card.appendChild(checkbox);
+
+    card.appendChild(el("div", { class: "field", html: `<strong>Top pain</strong>` }));
+    const painTA = el("textarea", { rows: 2, placeholder: "1-line top pain…" });
+    painTA.value = p.topPain || "";
+    painTA.addEventListener("input", () => { state.personas[idx].topPain = painTA.value; save(); });
+    card.appendChild(painTA);
+
+    card.appendChild(el("div", { class: "field", html: `<strong>Top opportunity</strong>` }));
+    const oppTA = el("textarea", { rows: 2, placeholder: "1-line top opportunity…" });
+    oppTA.value = p.topOpportunity || "";
+    oppTA.addEventListener("input", () => { state.personas[idx].topOpportunity = oppTA.value; save(); });
+    card.appendChild(oppTA);
+
+    card.appendChild(el("div", { class: "field", html: `<strong>Confidence</strong>` }));
+    const conf = el("select");
+    ["", "H", "M", "L"].forEach(o => {
+      const opt = el("option", { value: o, text: o || "—" });
+      if ((p.confidence || "") === o) opt.selected = true;
+      conf.appendChild(opt);
+    });
+    conf.style.padding = "0.35rem 0.5rem"; conf.style.borderRadius = "8px";
+    conf.style.border = "1px solid var(--cp-border)"; conf.style.background = "var(--cp-surface)"; conf.style.color = "var(--cp-text)";
+    conf.addEventListener("change", () => { state.personas[idx].confidence = conf.value; save(); });
+    card.appendChild(conf);
+
+    cards.appendChild(card);
+  });
+  snapshot.appendChild(cards);
+  wrap.appendChild(snapshot);
+
+  return wrap;
+}
+
+function textCard(label, value, onChange, placeholder = "") {
+  const c = el("div", { class: "card" });
+  c.appendChild(el("h3", { text: label }));
+  const inp = el("input", { type: "text", value: value || "", placeholder });
+  inp.addEventListener("input", () => onChange(inp.value));
+  c.appendChild(inp);
+  return c;
+}
+function numberCard(label, value, onChange) {
+  const c = el("div", { class: "card" });
+  c.appendChild(el("h3", { text: label }));
+  const inp = el("input", { type: "number", value: value ?? 0, min: 0 });
+  inp.style.width = "100%"; inp.style.padding = "0.45rem 0.55rem"; inp.style.borderRadius = "8px";
+  inp.style.border = "1px solid var(--cp-border)"; inp.style.background = "var(--cp-surface)"; inp.style.color = "var(--cp-text)";
+  inp.addEventListener("input", () => onChange(parseInt(inp.value || "0", 10)));
+  c.appendChild(inp);
+  return c;
+}
+
+// ============================================================
+// Tab: Personas (deep details)
+// ============================================================
+function renderPersonas() {
+  const wrap = document.createElement("div");
+  const p = panel("Personas", "Confirm role, tooling, and supporting quotes for each persona.");
+  wrap.appendChild(p);
+
+  state.personas.forEach((persona, idx) => {
+    const card = el("div", { class: "panel" });
+    card.style.borderLeft = "4px solid var(--cp-accent)";
+    card.appendChild(el("h2", { text: persona.title }));
+    card.appendChild(el("p", { class: "lead", text: persona.role }));
+
+    const t = el("table", { class: "data" });
+    const tbody = el("tbody");
+    const rows = [
+      ["Persona key", "key", false],
+      ["Title", "title", true],
+      ["Role", "role", true],
+      ["Team / POC", "poc", true],
+      ["Audience", "audience", true],
+      ["Authoring tool today", "authoring", true],
+      ["Publishing destination", "publish", true],
+    ];
+    rows.forEach(([label, key, editable]) => {
+      const tr = el("tr");
+      tr.appendChild(el("td", { text: label, html: `<strong>${esc(label)}</strong>` }));
+      if (editable) {
+        const td = el("td");
+        const inp = el("input", { type: "text", value: persona[key] || "" });
+        inp.addEventListener("input", () => { state.personas[idx][key] = inp.value; save(); });
+        td.appendChild(inp);
+        tr.appendChild(td);
+      } else {
+        tr.appendChild(el("td", { text: persona[key] }));
+      }
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+    card.appendChild(t);
+
+    card.appendChild(el("h3", { text: "Supporting quotes / evidence" , style: "margin-top:1rem; font-size:0.95rem;" }));
+    const quotes = el("textarea", { rows: 4, placeholder: "Paste verbatim quotes here…" });
+    quotes.value = persona.quotes || "";
+    quotes.style.width = "100%"; quotes.style.fontFamily = "inherit"; quotes.style.fontSize = "0.85rem";
+    quotes.style.padding = "0.6rem"; quotes.style.borderRadius = "8px";
+    quotes.style.border = "1px solid var(--cp-border)"; quotes.style.background = "var(--cp-surface)"; quotes.style.color = "var(--cp-text)";
+    quotes.addEventListener("input", () => { state.personas[idx].quotes = quotes.value; save(); });
+    card.appendChild(quotes);
+
+    wrap.appendChild(card);
+  });
+
+  return wrap;
+}
+
+// ============================================================
+// Tab: Heat-map (Pillar × Persona)
+// ============================================================
+function cycleValue(v) {
+  // empty -> L -> M -> H -> empty
+  return v === "" ? "L" : v === "L" ? "M" : v === "M" ? "H" : "";
+}
+function cellClass(v) {
+  return "cell " + (v === "H" ? "h" : v === "M" ? "m" : v === "L" ? "l" : "empty");
+}
+function cellLabel(v) { return v || "—"; }
+
+function renderMatrix(matrixKey, rows, cols, rowLabel = r => r, colLabel = c => c) {
+  const wrap = el("div", { class: "matrix-wrap" });
+  const t = el("table", { class: "matrix" });
+  const thead = el("thead");
+  const trh = el("tr");
+  trh.appendChild(el("th"));
+  cols.forEach(c => trh.appendChild(el("th", { class: "col-head", text: colLabel(c) })));
+  thead.appendChild(trh);
+  t.appendChild(thead);
+
+  const tbody = el("tbody");
+  rows.forEach(r => {
+    const tr = el("tr");
+    tr.appendChild(el("th", { class: "row-head", text: rowLabel(r) }));
+    cols.forEach(c => {
+      const td = el("td");
+      const val = (state[matrixKey][r] && state[matrixKey][r][c]) || "";
+      const div = el("div", { class: cellClass(val), text: cellLabel(val), role: "button", tabindex: "0", title: `${rowLabel(r)} × ${colLabel(c)}` });
+      const cycle = () => {
+        const cur = (state[matrixKey][r] && state[matrixKey][r][c]) || "";
+        const nxt = cycleValue(cur);
+        if (!state[matrixKey][r]) state[matrixKey][r] = {};
+        state[matrixKey][r][c] = nxt;
+        div.className = cellClass(nxt);
+        div.textContent = cellLabel(nxt);
+        save();
+        renderStats();
+      };
+      div.addEventListener("click", cycle);
+      div.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cycle(); } });
+      td.appendChild(div);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  t.appendChild(tbody);
+  wrap.appendChild(t);
+
+  const legend = el("div", { class: "legend" });
+  legend.innerHTML = `
+    <span><span class="sw" style="background: var(--cp-danger)"></span>H — High pain / opportunity</span>
+    <span><span class="sw" style="background: var(--cp-warning)"></span>M — Medium</span>
+    <span><span class="sw" style="background: var(--cp-success)"></span>L — Low</span>
+    <span><span class="sw" style="background: var(--cp-surface-soft); border:1px solid var(--cp-border)"></span>— Not yet rated</span>
+    <span style="margin-left:auto">Click a cell to cycle: empty → L → M → H → empty</span>
+  `;
+  return [wrap, legend];
+}
+
+function renderHeatmap() {
+  const wrap = document.createElement("div");
+  const p = panel("Pillar × Persona heat-map", "Rate each cell H/M/L based on pain or opportunity surfaced. The score is live for everyone you share this dashboard with.");
+  const [matrix, legend] = renderMatrix(
+    "pillarMatrix",
+    PILLARS.map(p => p.key),
+    PERSONAS.map(p => p.key),
+    k => PILLARS.find(p => p.key === k).title,
+    k => PERSONAS.find(p => p.key === k).title
+  );
+  p.appendChild(matrix);
+  p.appendChild(legend);
+  wrap.appendChild(p);
+
+  const ref = panel("Pillar reference", null);
+  const tbl = el("table", { class: "data" });
+  tbl.innerHTML = `<thead><tr><th>Pillar</th><th>Goal</th></tr></thead>`;
+  const tb = el("tbody");
+  PILLARS.forEach(p => {
+    tb.innerHTML += `<tr><td><strong>${esc(p.title)}</strong></td><td>${esc(p.goal)}</td></tr>`;
+  });
+  tbl.appendChild(tb);
+  ref.appendChild(tbl);
+  wrap.appendChild(ref);
+  return wrap;
+}
+
+function renderLifecycle() {
+  const wrap = document.createElement("div");
+  const p = panel("Lifecycle stage × Persona friction", "Where does friction live for each persona along the content lifecycle?");
+  const [matrix, legend] = renderMatrix(
+    "lifecycleMatrix",
+    LIFECYCLE_STAGES,
+    PERSONAS.map(p => p.key),
+    r => r,
+    k => PERSONAS.find(p => p.key === k).title
+  );
+  p.appendChild(matrix);
+  p.appendChild(legend);
+  wrap.appendChild(p);
+  return wrap;
+}
+
+// ============================================================
+// Tab: Themes
+// ============================================================
+function renderThemes() {
+  const wrap = document.createElement("div");
+  const p = panel("Cross-persona themes", "Patterns that recur across interviews. Tag each theme to a pillar so it ladders back to the product strategy.");
+
+  const toolbar = el("div", { class: "toolbar" });
+  toolbar.appendChild(el("span", { class: "hint", text: `${state.themes.filter(t=>t.theme.trim()).length} themes captured` }));
+  const right = el("div", { class: "right" });
+  right.appendChild(el("button", { class: "btn primary", text: "+ Add theme", onclick: () => {
+    state.themes.push({ id: rid(), theme: "", personas: "", mentions: "", pillar: "", priority: "" });
+    save(); renderActivePane();
+  }}));
+  toolbar.appendChild(right);
+  p.appendChild(toolbar);
+
+  const t = el("table", { class: "data" });
+  t.innerHTML = `<thead><tr>
+    <th style="width:28%">Theme</th>
+    <th style="width:16%">Personas affected</th>
+    <th style="width:12%">Mentions</th>
+    <th style="width:16%">Pillar</th>
+    <th style="width:12%">Priority</th>
+    <th style="width:16%">Actions</th>
+  </tr></thead>`;
+  const tb = el("tbody");
+  if (state.themes.length === 0) {
+    tb.appendChild(el("tr", {}, el("td", { colspan: 6, html: `<div class="empty-state">No themes yet. Click <strong>+ Add theme</strong>.</div>` })));
+  }
+  state.themes.forEach((th, idx) => {
+    const tr = el("tr");
+    tr.appendChild(rowText(th.theme, v => { state.themes[idx].theme = v; save(); }));
+    tr.appendChild(rowText(th.personas, v => { state.themes[idx].personas = v; save(); }, "e.g. SE, KM"));
+    tr.appendChild(rowText(th.mentions, v => { state.themes[idx].mentions = v; save(); }, "#"));
+    tr.appendChild(rowSelect(th.pillar, ["", ...PILLARS.map(p=>p.title)], v => { state.themes[idx].pillar = v; save(); }));
+    tr.appendChild(rowSelect(th.priority, ["", "P0", "P1", "P2", "P3"], v => { state.themes[idx].priority = v; save(); }));
+    const actTd = el("td", { class: "row-actions" });
+    actTd.appendChild(el("button", { class: "btn danger", text: "Delete", onclick: () => {
+      state.themes.splice(idx, 1); save(); renderActivePane();
+    }}));
+    tr.appendChild(actTd);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  p.appendChild(t);
+  wrap.appendChild(p);
+  return wrap;
+}
+
+// ============================================================
+// Tab: Opportunities
+// ============================================================
+function impactEffortToXY(impact, effort) {
+  // x = effort (left=low / right=high), y = impact (top=high / bottom=low)
+  const map = { H: 0.85, M: 0.5, L: 0.15 };
+  return { x: (map[effort] ?? 0.5) * 100, y: (1 - (map[impact] ?? 0.5)) * 100 };
+}
+
+function renderOpps() {
+  const wrap = document.createElement("div");
+  const p = panel("Opportunity backlog", "Prioritise on impact × effort. The scatter updates as you add or rate opportunities.");
+
+  const toolbar = el("div", { class: "toolbar" });
+  toolbar.appendChild(el("span", { class: "hint", text: `${state.opportunities.filter(o => o.title.trim()).length} opportunities` }));
+  const right = el("div", { class: "right" });
+  right.appendChild(el("button", { class: "btn primary", text: "+ Add opportunity", onclick: () => {
+    state.opportunities.push({ id: rid(), title: "", personas: "", pillar: "", impact: "M", effort: "M", owner: "", next: "" });
+    save(); renderActivePane();
+  }}));
+  toolbar.appendChild(right);
+  p.appendChild(toolbar);
+
+  const t = el("table", { class: "data" });
+  t.innerHTML = `<thead><tr>
+    <th style="width:26%">Opportunity</th>
+    <th style="width:12%">Personas</th>
+    <th style="width:14%">Pillar</th>
+    <th style="width:8%">Impact</th>
+    <th style="width:8%">Effort</th>
+    <th style="width:12%">Owner</th>
+    <th style="width:14%">Next step</th>
+    <th style="width:6%"></th>
+  </tr></thead>`;
+  const tb = el("tbody");
+  if (state.opportunities.length === 0) {
+    tb.appendChild(el("tr", {}, el("td", { colspan: 8, html: `<div class="empty-state">No opportunities yet. Add one above.</div>` })));
+  }
+  state.opportunities.forEach((op, idx) => {
+    const tr = el("tr");
+    tr.appendChild(rowText(op.title, v => { state.opportunities[idx].title = v; save(); renderActivePane(); }));
+    tr.appendChild(rowText(op.personas, v => { state.opportunities[idx].personas = v; save(); }));
+    tr.appendChild(rowSelect(op.pillar, ["", ...PILLARS.map(p=>p.title)], v => { state.opportunities[idx].pillar = v; save(); }));
+    tr.appendChild(rowSelect(op.impact, ["H","M","L"], v => { state.opportunities[idx].impact = v; save(); renderActivePane(); }));
+    tr.appendChild(rowSelect(op.effort, ["H","M","L"], v => { state.opportunities[idx].effort = v; save(); renderActivePane(); }));
+    tr.appendChild(rowText(op.owner, v => { state.opportunities[idx].owner = v; save(); }));
+    tr.appendChild(rowText(op.next, v => { state.opportunities[idx].next = v; save(); }));
+    const actTd = el("td", { class: "row-actions" });
+    actTd.appendChild(el("button", { class: "btn danger", text: "✕", title: "Delete", onclick: () => {
+      state.opportunities.splice(idx, 1); save(); renderActivePane();
+    }}));
+    tr.appendChild(actTd);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+  p.appendChild(t);
+
+  // Scatter
+  const sc = el("div", { class: "scatter" });
+  sc.appendChild(el("div", { class: "quad-line h" }));
+  sc.appendChild(el("div", { class: "quad-line v" }));
+  sc.appendChild(el("div", { class: "label-tl", text: "Quick wins" }));
+  sc.appendChild(el("div", { class: "label-tr", text: "Strategic bets" }));
+  sc.appendChild(el("div", { class: "label-bl", text: "Fill-ins" }));
+  sc.appendChild(el("div", { class: "label-br", text: "Time sinks" }));
+  sc.appendChild(el("div", { class: "axis-x", text: "Effort  →  Low / Med / High" }));
+  sc.appendChild(el("div", { class: "axis-y", text: "Impact  →  Low / Med / High" }));
+  state.opportunities.forEach((op, i) => {
+    if (!op.title.trim()) return;
+    const { x, y } = impactEffortToXY(op.impact, op.effort);
+    const dot = el("div", { class: "dot", text: String(i+1), title: `${op.title} (Impact ${op.impact}, Effort ${op.effort})` });
+    dot.style.left = x + "%"; dot.style.top = y + "%";
+    sc.appendChild(dot);
+  });
+  p.appendChild(sc);
+  p.appendChild(el("div", { class: "hint", text: "Quadrants: top-left = high impact / low effort (do first)." }));
+
+  wrap.appendChild(p);
+  return wrap;
+}
+
+// ============================================================
+// Tab: Decisions & next steps
+// ============================================================
+function renderDecisions() {
+  const wrap = document.createElement("div");
+
+  // Decisions
+  const dp = panel("Decisions & open questions", "Capture choices the team must make to move forward.");
+  const dt = el("div", { class: "toolbar" });
+  dt.appendChild(el("span", { class: "hint", text: `${state.decisions.filter(d => d.decision.trim()).length} open decisions` }));
+  const dr = el("div", { class: "right" });
+  dr.appendChild(el("button", { class: "btn primary", text: "+ Add decision", onclick: () => {
+    state.decisions.push({ id: rid(), decision: "", options: "", recommendation: "", owner: "", due: "" });
+    save(); renderActivePane();
+  }}));
+  dt.appendChild(dr);
+  dp.appendChild(dt);
+
+  const dtab = el("table", { class: "data" });
+  dtab.innerHTML = `<thead><tr>
+    <th style="width:26%">Decision needed</th>
+    <th style="width:24%">Options</th>
+    <th style="width:22%">Recommendation</th>
+    <th style="width:12%">Owner</th>
+    <th style="width:10%">Due</th>
+    <th style="width:6%"></th>
+  </tr></thead>`;
+  const dtb = el("tbody");
+  state.decisions.forEach((d, idx) => {
+    const tr = el("tr");
+    tr.appendChild(rowText(d.decision, v => { state.decisions[idx].decision = v; save(); }));
+    tr.appendChild(rowText(d.options, v => { state.decisions[idx].options = v; save(); }));
+    tr.appendChild(rowText(d.recommendation, v => { state.decisions[idx].recommendation = v; save(); }));
+    tr.appendChild(rowText(d.owner, v => { state.decisions[idx].owner = v; save(); }));
+    tr.appendChild(rowText(d.due, v => { state.decisions[idx].due = v; save(); }, "yyyy-mm-dd"));
+    const actTd = el("td", { class: "row-actions" });
+    actTd.appendChild(el("button", { class: "btn danger", text: "✕", onclick: () => {
+      state.decisions.splice(idx, 1); save(); renderActivePane();
+    }}));
+    tr.appendChild(actTd);
+    dtb.appendChild(tr);
+  });
+  dtab.appendChild(dtb);
+  dp.appendChild(dtab);
+  wrap.appendChild(dp);
+
+  // Next steps
+  const np = panel("Next steps", "Concrete actions out of this discovery sprint.");
+  const nt = el("div", { class: "toolbar" });
+  nt.appendChild(el("span", { class: "hint", text: `${state.nextSteps.filter(s => s.action.trim()).length} actions` }));
+  const nr = el("div", { class: "right" });
+  nr.appendChild(el("button", { class: "btn primary", text: "+ Add action", onclick: () => {
+    state.nextSteps.push({ id: rid(), action: "", owner: "", due: "" });
+    save(); renderActivePane();
+  }}));
+  nt.appendChild(nr);
+  np.appendChild(nt);
+
+  const ntab = el("table", { class: "data" });
+  ntab.innerHTML = `<thead><tr>
+    <th style="width:60%">Action</th>
+    <th style="width:18%">Owner</th>
+    <th style="width:14%">Due</th>
+    <th style="width:8%"></th>
+  </tr></thead>`;
+  const ntb = el("tbody");
+  state.nextSteps.forEach((s, idx) => {
+    const tr = el("tr");
+    tr.appendChild(rowText(s.action, v => { state.nextSteps[idx].action = v; save(); }));
+    tr.appendChild(rowText(s.owner, v => { state.nextSteps[idx].owner = v; save(); }));
+    tr.appendChild(rowText(s.due, v => { state.nextSteps[idx].due = v; save(); }, "yyyy-mm-dd"));
+    const actTd = el("td", { class: "row-actions" });
+    actTd.appendChild(el("button", { class: "btn danger", text: "✕", onclick: () => {
+      state.nextSteps.splice(idx, 1); save(); renderActivePane();
+    }}));
+    tr.appendChild(actTd);
+    ntb.appendChild(tr);
+  });
+  ntab.appendChild(ntb);
+  np.appendChild(ntab);
+  wrap.appendChild(np);
+
+  return wrap;
+}
+
+// ============================================================
+// Row helpers
+// ============================================================
+function rowText(value, onChange, placeholder = "") {
+  const td = el("td");
+  const inp = el("input", { type: "text", value: value || "", placeholder });
+  inp.addEventListener("input", () => onChange(inp.value));
+  td.appendChild(inp);
+  return td;
+}
+function rowSelect(value, options, onChange) {
+  const td = el("td");
+  const sel = el("select");
+  options.forEach(o => {
+    const opt = el("option", { value: o, text: o || "—" });
+    if ((value || "") === o) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", () => onChange(sel.value));
+  td.appendChild(sel);
+  return td;
+}
+
+// ============================================================
+// Header actions
+// ============================================================
+document.getElementById("themeToggle").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") || "light";
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("ccs.theme", next);
+});
+
+document.getElementById("exportBtn").addEventListener("click", () => {
+  const payload = { exportedAt: new Date().toISOString(), state };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ccs-discovery-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("importInput").addEventListener("change", e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const incoming = parsed.state || parsed;
+      state = mergeDefaults(structuredClone(DEFAULT_STATE), incoming);
+      save(); renderActivePane();
+    } catch (err) {
+      alert("Invalid JSON file: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("Reset all findings to defaults? This cannot be undone (export first if you want a backup).")) return;
+  state = structuredClone(DEFAULT_STATE);
+  save(); renderActivePane();
+});
+
+window.addEventListener("hashchange", () => {
+  const h = location.hash.slice(1);
+  if (TABS.find(t => t.key === h) && h !== activeTab) {
+    activeTab = h;
+    renderTabs(); renderActivePane();
+  }
+});
+
+// ============================================================
+// First-run hydration from findings/baseline.json (hosted mode only)
+// ============================================================
+async function tryHydrateBaseline() {
+  if (localStorage.getItem(STORAGE_KEY)) return;
+  if (location.protocol === "file:") return;
+  try {
+    const res = await fetch("findings/baseline.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const incoming = await res.json();
+    state = mergeDefaults(structuredClone(DEFAULT_STATE), incoming);
+    save();
+    renderTabs();
+    renderActivePane();
+    const ind = document.getElementById("saveIndicator");
+    if (ind) ind.textContent = "Loaded baseline";
+  } catch (e) {
+    console.warn("baseline.json hydrate failed:", e);
+  }
+}
+
+// ============================================================
+// Boot
+// ============================================================
+renderTabs();
+renderActivePane();
+tryHydrateBaseline();
+</script>
+</body>
+</html>

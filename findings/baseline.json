@@ -1,0 +1,286 @@
+{
+  "meta": {
+    "owner": "Sony Manay (PM)",
+    "window": "Discovery window starting 2026-06-06",
+    "interviewsDone": 0,
+    "version": "baseline-v1.0",
+    "visionDraft": "One unified authoring experience that enables every CCS persona to ideate, draft, govern, publish, and improve content across internal and external surfaces — with AI assistance, shared metadata, and closed-loop performance signals.",
+    "note": "All cell values, themes, and opportunities below are HYPOTHESES to validate in discovery — not findings."
+  },
+  "personas": [
+    {
+      "key": "tech_se",
+      "title": "CSS Tech SE",
+      "role": "Tech Support Engineer / EEE",
+      "poc": "A&I Winncomm",
+      "audience": "Internal SE",
+      "authoring": "Rubik",
+      "publish": "Evergreen, CSS Wiki",
+      "interviewed": false,
+      "topPain": "Hypothesis: Time stolen from active cases; weak search on CSS Wiki; no closed-loop feedback when an article fails to deflect.",
+      "topOpportunity": "Hypothesis: In-flow KB authoring from inside Rubik / case workspace with auto-tagging from case context.",
+      "confidence": "Low",
+      "quotes": "(Pending interview — capture verbatim 5-Why responses here.)"
+    },
+    {
+      "key": "km_lead",
+      "title": "CSS KM Lead",
+      "role": "Tech Support Engineer / EEE (KM lens)",
+      "poc": "MW",
+      "audience": "Internal SE org-wide",
+      "authoring": "CSS Wiki",
+      "publish": "CSS Wiki",
+      "interviewed": false,
+      "topPain": "Hypothesis: Owner churn; stale content backlog; inconsistent metadata; no inventory truth across surfaces.",
+      "topOpportunity": "Hypothesis: Unified inventory + freshness signals across Evergreen / CSS Wiki / LMC / SMC with ownership routing.",
+      "confidence": "Low",
+      "quotes": "(Pending interview — capture verbatim 5-Why responses here.)"
+    },
+    {
+      "key": "publish_mgr",
+      "title": "Content Publish Manager",
+      "role": "Content creator & publisher (external)",
+      "poc": "S&O",
+      "audience": "External customers",
+      "authoring": "Content Mentor / VS Code",
+      "publish": "LMC, SMC",
+      "interviewed": false,
+      "topPain": "Hypothesis: Brand & legal review bottlenecks; localization friction; SEO + accessibility late checks; duplicate sources of truth.",
+      "topOpportunity": "Hypothesis: Single authoring surface with AI brand/SEO/accessibility pre-flight before review handoff.",
+      "confidence": "Low",
+      "quotes": "(Pending interview — capture verbatim 5-Why responses here.)"
+    },
+    {
+      "key": "ai_creator",
+      "title": "AI Content Creator",
+      "role": "Automated harvester of case-closure notes",
+      "poc": "(confirm)",
+      "audience": "Internal AAQ users",
+      "authoring": "Automation pipeline",
+      "publish": "Cornerstone AAQ",
+      "interviewed": false,
+      "topPain": "Hypothesis: Quality control of AI drafts; PII leakage risk; weak provenance; human-in-the-loop bottleneck; trust calibration.",
+      "topOpportunity": "Hypothesis: Provenance-tagged AI drafts with one-click SME approval routed by topic ownership.",
+      "confidence": "Low",
+      "quotes": "(Pending interview — capture verbatim 5-Why responses here.)"
+    }
+  ],
+  "pillarMatrix": {
+    "health": {
+      "tech_se": "M",
+      "km_lead": "H",
+      "publish_mgr": "M",
+      "ai_creator": "H"
+    },
+    "creation": {
+      "tech_se": "H",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "H"
+    },
+    "idea_engine": {
+      "tech_se": "M",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "H"
+    },
+    "performance": {
+      "tech_se": "L",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "M"
+    },
+    "maintenance": {
+      "tech_se": "M",
+      "km_lead": "H",
+      "publish_mgr": "M",
+      "ai_creator": "L"
+    },
+    "governance": {
+      "tech_se": "L",
+      "km_lead": "H",
+      "publish_mgr": "H",
+      "ai_creator": "H"
+    }
+  },
+  "lifecycleMatrix": {
+    "Ideation / intake": {
+      "tech_se": "M",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "M"
+    },
+    "Drafting": {
+      "tech_se": "H",
+      "km_lead": "M",
+      "publish_mgr": "M",
+      "ai_creator": "H"
+    },
+    "Editing / refining": {
+      "tech_se": "M",
+      "km_lead": "M",
+      "publish_mgr": "M",
+      "ai_creator": "H"
+    },
+    "Compliance / brand / SEO / accessibility": {
+      "tech_se": "L",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "H"
+    },
+    "Review & approval": {
+      "tech_se": "M",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "H"
+    },
+    "Publishing": {
+      "tech_se": "M",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "M"
+    },
+    "Performance & analytics": {
+      "tech_se": "L",
+      "km_lead": "M",
+      "publish_mgr": "H",
+      "ai_creator": "M"
+    },
+    "Maintenance & retirement": {
+      "tech_se": "M",
+      "km_lead": "H",
+      "publish_mgr": "M",
+      "ai_creator": "L"
+    }
+  },
+  "themes": [
+    {
+      "id": "thm-search-deflection",
+      "theme": "Search & deflection failure loop (hypothesis)",
+      "personas": "Tech SE, KM Lead, AI Creator",
+      "mentions": "0 (to be validated)",
+      "pillar": "Content Health + Performance",
+      "priority": "High"
+    },
+    {
+      "id": "thm-review-bottleneck",
+      "theme": "Review/approval bottleneck (hypothesis)",
+      "personas": "Publish Manager, AI Creator",
+      "mentions": "0 (to be validated)",
+      "pillar": "Content Governance",
+      "priority": "High"
+    },
+    {
+      "id": "thm-multi-surface-truth",
+      "theme": "No single source of truth across surfaces (hypothesis)",
+      "personas": "All 4",
+      "mentions": "0 (to be validated)",
+      "pillar": "Content Governance + Maintenance",
+      "priority": "High"
+    },
+    {
+      "id": "thm-ai-trust",
+      "theme": "AI draft trust + provenance gap (hypothesis)",
+      "personas": "AI Creator, KM Lead, Tech SE",
+      "mentions": "0 (to be validated)",
+      "pillar": "Content Creation + Governance",
+      "priority": "Medium"
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "opp-in-flow-kb",
+      "title": "In-flow KB authoring from case workspace",
+      "personas": "Tech SE",
+      "pillar": "Creation",
+      "impact": "H",
+      "effort": "M",
+      "owner": "TBD",
+      "next": "Validate with 3 SEs in discovery"
+    },
+    {
+      "id": "opp-unified-inventory",
+      "title": "Unified content inventory + freshness across surfaces",
+      "personas": "KM Lead, Publish Mgr",
+      "pillar": "Health",
+      "impact": "H",
+      "effort": "H",
+      "owner": "TBD",
+      "next": "Inventory audit of CSS Wiki / Evergreen / LMC / SMC"
+    },
+    {
+      "id": "opp-ai-preflight",
+      "title": "AI brand/SEO/a11y pre-flight before human review",
+      "personas": "Publish Mgr",
+      "pillar": "Creation + Governance",
+      "impact": "H",
+      "effort": "M",
+      "owner": "TBD",
+      "next": "Map current review checklist to pre-flight rules"
+    },
+    {
+      "id": "opp-provenance",
+      "title": "Provenance-tagged AI drafts with one-click SME approval",
+      "personas": "AI Creator, KM Lead",
+      "pillar": "Creation + Governance",
+      "impact": "H",
+      "effort": "H",
+      "owner": "TBD",
+      "next": "Spike on provenance schema"
+    },
+    {
+      "id": "opp-search-loop",
+      "title": "Closed-loop search-failure → content-gap signal",
+      "personas": "Tech SE, KM Lead",
+      "pillar": "Idea Engine + Performance",
+      "impact": "M",
+      "effort": "M",
+      "owner": "TBD",
+      "next": "Pull 30 days of CSS Wiki search-failure logs"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "dec-mvp-scope",
+      "decision": "MVP scope for unified authoring tool",
+      "options": "(A) Internal-only first / (B) Internal + External together / (C) AI harvest first",
+      "recommendation": "(Pending discovery synthesis)",
+      "owner": "Sony Manay (PM)",
+      "due": "End of discovery"
+    },
+    {
+      "id": "dec-source-of-truth",
+      "decision": "Where does canonical metadata live?",
+      "options": "(A) New service / (B) Extend CSS Wiki / (C) Extend Content Mentor",
+      "recommendation": "(Pending discovery synthesis)",
+      "owner": "Sony Manay (PM)",
+      "due": "End of discovery"
+    }
+  ],
+  "nextSteps": [
+    {
+      "id": "ns-schedule-interviews",
+      "action": "Schedule 4× 60-min discovery interviews (one per persona)",
+      "owner": "Sony Manay (PM)",
+      "due": "Week 1"
+    },
+    {
+      "id": "ns-baseline-signals",
+      "action": "Pull baseline metrics: CSS Wiki search failures, LMC/SMC freshness, AAQ unanswered queries",
+      "owner": "PM + Data partner",
+      "due": "Week 1"
+    },
+    {
+      "id": "ns-confirm-ai-poc",
+      "action": "Confirm POC owner for AI Content Creator persona",
+      "owner": "Sony Manay (PM)",
+      "due": "Week 1"
+    },
+    {
+      "id": "ns-synthesis-readout",
+      "action": "Cross-persona synthesis readout to leadership",
+      "owner": "Sony Manay (PM)",
+      "due": "End of Week 3"
+    }
+  ]
+}
