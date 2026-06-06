@@ -36,3 +36,7 @@ Interactive single-file dashboard for live findings synthesis.
 - Theme follows system preference; toggle in the header.
 - Reset clears localStorage (export first if you want a backup).
 - All seed cell values, themes, opportunities are **HYPOTHESES to validate**, not findings.
+
+## Related artifacts
+- `lifecycle.html` — Interactive E2E Content Lifecycle vision &amp; architecture diagram (8 pillars including 3 NEW: Discovery, Retirement, Trust &amp; Safety). Open it in the same way as `index.html`.
+
