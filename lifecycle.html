@@ -140,16 +140,24 @@ header.app {
   border: 1px solid var(--cp-border);
   background: var(--cp-surface);
   color: var(--cp-text);
-  padding: 0.3rem 0.65rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 0.625rem;
   font-size: 0.82rem;
   font-family: inherit;
+  transition: all 0.15s ease;
 }
+.lens-btn:hover { border-color: var(--cp-accent); color: var(--cp-accent); }
 .lens-btn.active {
   background: var(--cp-accent);
   color: var(--cp-accent-fg);
   border-color: var(--cp-accent);
+  font-weight: 600;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.86rem;
+  box-shadow: 0 0 0 3px var(--cp-accent-soft), 0 2px 6px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
 }
+.lens-btn.active::before { content: "● "; opacity: 0.7; }
 
 main { padding: 1.25rem 1.5rem 2rem; }
 
@@ -257,18 +265,6 @@ main { padding: 1.25rem 1.5rem 2rem; }
   letter-spacing: 0.05em;
   font-weight: 500;
 }
-.node.new::after {
-  content: "NEW";
-  position: absolute;
-  top: -8px; right: -8px;
-  background: var(--cp-accent);
-  color: var(--cp-accent-fg);
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-  letter-spacing: 0.05em;
-}
 .node-icon { font-size: 1rem; }
 
 /* Lens dimming */
@@ -293,24 +289,71 @@ body[data-lens="feedback"] .plate:not(.lens-feedback) {
   opacity: 0.12;
 }
 
+/* How-to-read callout */
+.how-to-read {
+  margin: 0.9rem 1.5rem 0;
+  padding: 0.7rem 1rem;
+  background: var(--cp-accent-soft);
+  border: 1px solid var(--cp-accent);
+  border-left-width: 4px;
+  border-radius: 0.625rem;
+  font-size: 0.84rem;
+  color: var(--cp-text);
+  display: flex; gap: 1.2rem; flex-wrap: wrap; align-items: center;
+}
+.how-to-read strong { color: var(--cp-accent); letter-spacing: 0.02em; text-transform: uppercase; font-size: 0.78rem; }
+.how-to-read ol { list-style: none; padding: 0; margin: 0; display: flex; gap: 1.1rem; flex-wrap: wrap; }
+.how-to-read li { display: flex; align-items: center; gap: 0.35rem; }
+.how-to-read .step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 999px;
+  background: var(--cp-accent); color: var(--cp-accent-fg);
+  font-size: 0.7rem; font-weight: 700;
+}
+
 /* legend */
 .legend {
   display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem;
   margin-top: 0.8rem;
-  padding-top: 0.7rem;
-  border-top: 1px dashed var(--cp-border);
-  font-size: 0.78rem;
-  color: var(--cp-text-muted);
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--cp-border);
+  border-radius: 0.625rem;
+  background: var(--cp-surface-soft);
+  font-size: 0.8rem;
+  color: var(--cp-text);
+  align-items: center;
 }
-.legend-item { display: flex; align-items: center; gap: 0.35rem; }
-.legend-sw { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--cp-border-strong); }
-.legend-sw.primary { border-color: var(--cp-accent); }
-.legend-sw.feedback { border-style: dashed; border-color: var(--cp-warning); }
-.legend-sw.observe { border-style: dotted; border-color: var(--cp-text-muted); }
+.legend-title {
+  font-weight: 600; color: var(--cp-accent); text-transform: uppercase;
+  letter-spacing: 0.04em; font-size: 0.72rem;
+  padding-right: 0.6rem; margin-right: 0.4rem;
+  border-right: 1px solid var(--cp-border);
+}
+.legend-item { display: flex; align-items: center; gap: 0.4rem; }
+.legend-sw {
+  display: inline-block; width: 28px; height: 0;
+  border-top: 2.5px solid var(--cp-border-strong);
+  position: relative;
+}
+.legend-sw.primary { border-color: var(--cp-accent); border-top-width: 3px; }
+.legend-sw.feedback { border-style: dashed; border-color: var(--cp-warning); border-top-width: 2.5px; }
+.legend-sw.observe { border-style: dotted; border-color: var(--cp-text-muted); border-top-width: 2.5px; }
+.legend-sw::after {
+  content: "▶"; position: absolute; right: -8px; top: -8px;
+  font-size: 0.6rem; color: inherit;
+}
+.legend-sw.primary::after { color: var(--cp-accent); }
+.legend-sw.feedback::after { color: var(--cp-warning); }
+.legend-sw.observe::after { color: var(--cp-text-muted); }
 .legend-plate {
-  display: inline-block; width: 22px; height: 12px;
+  display: inline-block; width: 26px; height: 14px;
   background: var(--cp-accent-soft); border: 1px dashed var(--cp-accent);
   border-radius: 3px;
+}
+.legend-node {
+  display: inline-block; padding: 0.1rem 0.4rem;
+  background: var(--cp-surface); border: 1px solid var(--cp-border-strong);
+  border-radius: 6px; font-size: 0.7rem; font-weight: 600;
 }
 
 /* Side panel */
@@ -376,12 +419,38 @@ aside.detail .answers {
   border-color: var(--cp-accent);
   color: var(--cp-accent);
 }
-.tag.new {
-  background: var(--cp-accent);
-  color: var(--cp-accent-fg);
-  border-color: var(--cp-accent);
-}
 .split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+/* Lens-matched section highlight in detail panel */
+.detail-block {
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  margin: 0.4rem -0.3rem;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+.detail-block.lens-match {
+  background: var(--cp-accent-soft);
+  border-color: var(--cp-accent);
+  box-shadow: 0 0 0 2px var(--cp-accent-soft);
+}
+.detail-block.lens-match h3::after {
+  content: " ← in scope";
+  font-size: 0.7rem;
+  color: var(--cp-accent);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.lens-banner {
+  font-size: 0.78rem;
+  background: var(--cp-surface-soft);
+  border: 1px dashed var(--cp-accent);
+  color: var(--cp-text-muted);
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+  margin: 0.3rem 0 0.6rem;
+}
+.lens-banner strong { color: var(--cp-accent); text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.72rem; }
 
 /* Sections below */
 section.block {
@@ -394,28 +463,6 @@ section.block {
 }
 section.block h2 { margin-bottom: 0.5rem; }
 section.block .lede { color: var(--cp-text-muted); margin-bottom: 0.75rem; font-size: 0.9rem; }
-
-.missing-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.8rem;
-}
-.missing-card {
-  border: 1px solid var(--cp-border);
-  border-radius: 12px;
-  padding: 0.7rem 0.85rem;
-  background: var(--cp-surface-soft);
-  position: relative;
-}
-.missing-card h3 { color: var(--cp-accent); margin-bottom: 0.3rem; font-size: 0.92rem; }
-.missing-card p { font-size: 0.85rem; color: var(--cp-text-muted); margin: 0; }
-.missing-card .new-badge {
-  position: absolute; top: -8px; right: -8px;
-  background: var(--cp-accent); color: var(--cp-accent-fg);
-  font-size: 0.62rem; font-weight: 700;
-  padding: 0.1rem 0.4rem; border-radius: 999px;
-  letter-spacing: 0.05em;
-}
 
 table.signals {
   width: 100%;
@@ -513,6 +560,16 @@ footer.app {
   <span class="label" style="margin: 0;">Click any node for details</span>
 </div>
 
+<div class="how-to-read">
+  <strong>How to read</strong>
+  <ol>
+    <li><span class="step-num">1</span> Pick a <em>lens</em> above to focus the diagram</li>
+    <li><span class="step-num">2</span> Follow arrows clockwise — primary flow</li>
+    <li><span class="step-num">3</span> Click any node → side panel updates and highlights what's in scope for the active lens</li>
+    <li><span class="step-num">4</span> Scroll for governance placement, maintenance signals &amp; KPIs</li>
+  </ol>
+</div>
+
 <main>
 
 <div class="diagram-shell">
@@ -539,7 +596,7 @@ footer.app {
 
         <!-- Trust & Safety: overlay around AI path (top-center) -->
         <rect class="plate lens-ai" x="320" y="70" width="320" height="170" rx="10" />
-        <text class="plate-label lens-ai" x="335" y="88">Trust &amp; Safety (NEW · heaviest on AI)</text>
+        <text class="plate-label lens-ai" x="335" y="88">Trust &amp; Safety · heaviest on AI</text>
 
         <!-- Feedback loop plate: bottom band -->
         <rect class="plate lens-feedback" x="40" y="500" width="1020" height="32" rx="10" />
@@ -604,11 +661,12 @@ footer.app {
     </div>
 
     <div class="legend">
-      <span class="legend-item"><span class="legend-sw primary"></span> Primary flow</span>
-      <span class="legend-item"><span class="legend-sw feedback"></span> Feedback loop</span>
-      <span class="legend-item"><span class="legend-sw observe"></span> Health / governance observation</span>
-      <span class="legend-item"><span class="legend-plate"></span> Cross-cutting plane</span>
-      <span class="legend-item"><span class="tag new">NEW</span> Added pillar (not in original 6)</span>
+      <span class="legend-title">Legend</span>
+      <span class="legend-item"><span class="legend-sw primary"></span> <strong>Solid</strong> &nbsp;Primary flow (idea → publish → consume)</span>
+      <span class="legend-item"><span class="legend-sw feedback"></span> <strong>Dashed</strong> &nbsp;Feedback loop (signals back upstream)</span>
+      <span class="legend-item"><span class="legend-sw observe"></span> <strong>Dotted</strong> &nbsp;Observation (Health / governance watching live content)</span>
+      <span class="legend-item"><span class="legend-plate"></span> Cross-cutting plane (always-on, every stage)</span>
+      <span class="legend-item"><span class="legend-node">Node</span> = Lifecycle stage · click to inspect</span>
     </div>
   </div>
 
@@ -616,36 +674,6 @@ footer.app {
     <!-- populated by JS -->
   </aside>
 </div>
-
-<section class="block">
-  <h2>What was missing from the original 6 pillars — and was added</h2>
-  <p class="lede">The original 6 pillars (Health, Creation, Idea Engine, Performance, Maintenance, Governance) are necessary but not sufficient for true E2E visibility. Three explicit stages and one cross-cutting plane were added.</p>
-  <div class="missing-grid">
-    <div class="missing-card">
-      <span class="new-badge">NEW</span>
-      <h3>🔍 Discovery &amp; Consumption</h3>
-      <p>The bridge between Publishing and Performance. Without modeling how customers / SEs / AI agents actually find content, Performance metrics have no story. Includes search, in-product surfacing, AI-agent citation.</p>
-    </div>
-    <div class="missing-card">
-      <span class="new-badge">NEW</span>
-      <h3>🗄️ Retirement &amp; Archival</h3>
-      <p>Originally implicit inside Maintenance. Made explicit so content has a deliberate end-of-life: redirects, archival, AI-agent index removal. Otherwise stale content lives forever.</p>
-    </div>
-    <div class="missing-card">
-      <span class="new-badge">NEW</span>
-      <h3>🛡️ Trust &amp; Safety plane</h3>
-      <p>PII redaction, hallucination detection, provenance enforcement. AI Content Creator persona introduces risks that don't exist in pure human authoring — they need their own governance plane, not buried in generic "Governance".</p>
-    </div>
-    <div class="missing-card">
-      <h3>🔄 Feedback &amp; Improvement loop</h3>
-      <p>Made an explicit cross-cutting plane. Closes the loop on every published artifact — thumbs, comments, escalations, AI-agent citation accuracy — feeding both Performance and Idea Engine.</p>
-    </div>
-    <div class="missing-card">
-      <h3>🌐 Localization &amp; Personalization</h3>
-      <p>Folded into Publishing &amp; Multi-Surface Delivery for now. Worth promoting to a stage of its own once external-customer surfaces (LMC/SMC) become primary.</p>
-    </div>
-  </div>
-</section>
 
 <section class="block">
   <h2>Content Maintenance — what triggers updates &amp; what AI can auto-do</h2>
@@ -773,8 +801,8 @@ const NODES = [
     owners: ["Publish Manager", "Tech SE (internal surfaces)"],
     kpis: ["Time-to-publish", "Surface coverage per content item", "Localization lead time"]
   },
-  { key: "discovery", x: 820, y: 540, lens: ["lens-feedback"], isNew: true,
-    icon: "🔍", title: "Discovery & Consumption", stage: "5 · Find & Use (NEW)",
+  { key: "discovery", x: 820, y: 540, lens: ["lens-feedback"],
+    icon: "🔍", title: "Discovery & Consumption", stage: "5 · Find & Use",
     summary: "How customers, SEs, and AI agents actually find and use the content.",
     purpose: "Surface content at the moment of need — through search, in-product surfacing, AI agent recommendations, proactive notifications. Without modeling this stage, performance metrics have no story.",
     inputs: ["Published content + metadata + structured snippets"],
@@ -783,7 +811,7 @@ const NODES = [
     human: ["Search and browse", "Direct links from email / chat", "Reading & applying content"],
     owners: ["Shared — Tech SE workspace + Publish Manager surfaces"],
     kpis: ["Click-through from search", "AI-agent citation rate", "Time-to-find", "% of intents served first-try"],
-    answers: "<strong>This stage was missing from the original 6 pillars.</strong> Discovery is the bridge that makes Performance meaningful — you can't measure 'is content working' without knowing how it's reached."
+    answers: "Discovery is the bridge that makes Performance meaningful — you can't measure 'is content working' without knowing how it's reached."
   },
   { key: "performance", x: 500, y: 610, lens: ["lens-feedback"],
     icon: "📈", title: "Content Performance", stage: "6 · Measure",
@@ -813,8 +841,8 @@ const NODES = [
     kpis: ["Mean time to refresh", "Stale content %", "Re-gate first-pass rate", "% of Maintenance triggered by AI vs human"],
     answers: "<strong>What triggers updates? What can AI do?</strong> See the Maintenance Signals table below — explicit mapping of trigger → source pillar → who acts → AI safe-to-auto. Health = passive backlog, Performance = active backlog, both feed one unified queue."
   },
-  { key: "retirement", x: 105, y: 360, lens: ["lens-governance"], isNew: true,
-    icon: "🗄️", title: "Retirement & Archival", stage: "8 · Retire (NEW)",
+  { key: "retirement", x: 105, y: 360, lens: ["lens-governance"],
+    icon: "🗄️", title: "Retirement & Archival", stage: "8 · Retire",
     summary: "Planned sunset, archival, redirects — the deliberate end of the lifecycle.",
     purpose: "Explicit decision to retire content (product end-of-life, duplicate consolidation, sustained low value). Preserves history, sets redirects, removes from active inventory and AI-agent indexes.",
     inputs: ["Decision from Maintenance or governance audit", "Product EOL announcements", "Sustained low-performance signals"],
@@ -823,7 +851,7 @@ const NODES = [
     human: ["KM Lead: retirement decision", "Owner: optional successor authoring"],
     owners: ["KM Lead"],
     kpis: ["Stale inventory %", "Redirect coverage on retired content", "Retired-but-still-cited (anomaly)"],
-    answers: "<strong>This stage was missing.</strong> Retirement was implicit inside Maintenance, which let content live forever in a 'stale' state. Making it explicit means content has a deliberate end-of-life with redirects and AI-index cleanup."
+    answers: "Retirement makes end-of-life deliberate — redirects, archived history, and AI-index cleanup so retired content doesn't keep getting cited."
   }
 ];
 
@@ -852,7 +880,7 @@ const layer = document.getElementById("nodesLayer");
 
 NODES.forEach(n => {
   const d = document.createElement("div");
-  d.className = "node " + (n.lens || []).join(" ") + (n.isNew ? " new" : "");
+  d.className = "node " + (n.lens || []).join(" ");
   d.dataset.key = n.key;
   d.style.left = (n.x / 1100 * 100) + "%";
   d.style.top  = (n.y / 760  * 100) + "%";
@@ -885,41 +913,71 @@ function selectNode(key) {
   activeKey = key;
   document.querySelectorAll(".node").forEach(el =>
     el.classList.toggle("active", el.dataset.key === key));
+
+  const lens = document.body.dataset.lens || "full";
+  const lensLabel = {
+    full: "Full lifecycle",
+    ai: "AI augmentation",
+    human: "Human path",
+    governance: "Governance",
+    feedback: "Feedback loops"
+  }[lens] || "Full lifecycle";
+
+  // Which detail blocks are in scope for the active lens
+  const inScope = {
+    ai:         { ai: true, inputs: false, outputs: false, human: false, owners: false, kpis: false },
+    human:      { human: true, owners: true, ai: false, inputs: false, outputs: false, kpis: false },
+    governance: { inputs: true, outputs: true, owners: true, kpis: false, ai: false, human: false },
+    feedback:   { outputs: true, kpis: true, inputs: false, owners: false, ai: false, human: false },
+    full:       { ai: true, human: true, inputs: true, outputs: true, owners: true, kpis: true }
+  }[lens];
+
+  const cls = (k) => inScope && inScope[k] ? "detail-block lens-match" : "detail-block";
+
+  const banner = lens === "full"
+    ? ""
+    : `<div class="lens-banner"><strong>Lens:</strong> ${lensLabel} — highlighted blocks are in scope.</div>`;
+
   detail.innerHTML = `
     <span class="stage-pill">${n.stage}</span>
-    <h2><span>${n.icon}</span> ${n.title} ${n.isNew ? '<span class="tag new" style="margin-left:0.5rem;">NEW</span>' : ''}</h2>
+    <h2><span>${n.icon}</span> ${n.title}</h2>
     <div class="summary">${n.summary}</div>
+    ${banner}
 
     <h3>Purpose</h3>
     <p style="font-size: 0.86rem;">${n.purpose}</p>
 
     <div class="split2">
-      <div>
+      <div class="${cls('inputs')}">
         <h3>Inputs</h3>
         ${listHtml(n.inputs)}
       </div>
-      <div>
+      <div class="${cls('outputs')}">
         <h3>Outputs</h3>
         ${listHtml(n.outputs)}
       </div>
     </div>
 
     <div class="split2">
-      <div>
+      <div class="${cls('ai')}">
         <h3>🤖 AI capabilities</h3>
         ${listHtml(n.ai)}
       </div>
-      <div>
+      <div class="${cls('human')}">
         <h3>👤 Human role</h3>
         ${listHtml(n.human)}
       </div>
     </div>
 
-    <h3>Owners (personas)</h3>
-    <div>${tags(n.owners, "accent")}</div>
+    <div class="${cls('owners')}">
+      <h3>Owners (personas)</h3>
+      <div>${tags(n.owners, "accent")}</div>
+    </div>
 
-    <h3>KPIs</h3>
-    ${listHtml(n.kpis)}
+    <div class="${cls('kpis')}">
+      <h3>KPIs</h3>
+      ${listHtml(n.kpis)}
+    </div>
 
     ${n.answers ? `<div class="answers">💬 ${n.answers}</div>` : ''}
   `;
@@ -957,6 +1015,7 @@ document.querySelectorAll(".lens-btn").forEach(btn => {
     btn.classList.add("active");
     const lens = btn.dataset.lens;
     document.body.dataset.lens = lens;
+    if (activeKey) selectNode(activeKey);
   });
 });
 
