@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CCS Content Lifecycle — Vision &amp; Architecture</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const stored = localStorage.getItem("ccs.lifecycle.theme");
+    const theme = param || stored ||
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+code, pre, .mono { font-family: Consolas, "Courier New", Courier, monospace; }
+h1, h2, h3 { margin: 0 0 0.25rem 0; color: var(--cp-text); }
+h1 { font-size: 1.45rem; font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: 1.1rem; font-weight: 600; }
+h3 { font-size: 0.95rem; font-weight: 600; }
+p { margin: 0 0 0.5rem 0; }
+a { color: var(--cp-link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header.app {
+  background: var(--cp-bg-elevated);
+  border-bottom: 1px solid var(--cp-border);
+  padding: 1rem 1.5rem 0.75rem;
+  position: sticky; top: 0; z-index: 10;
+}
+.header-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1.5rem; flex-wrap: wrap;
+}
+.brand { flex: 1; min-width: 0; }
+.brand .sub { color: var(--cp-text-muted); font-size: 0.85rem; }
+.vision {
+  margin-top: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--cp-accent-soft);
+  border-left: 3px solid var(--cp-accent);
+  border-radius: 0 0.625rem 0.625rem 0;
+  font-size: 0.9rem;
+  color: var(--cp-text);
+}
+.vision strong { color: var(--cp-accent); }
+.header-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: flex-start; }
+.btn {
+  cursor: pointer;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.625rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover { background: var(--cp-surface-soft); border-color: var(--cp-border-strong); }
+.btn.primary { background: var(--cp-accent); color: var(--cp-accent-fg); border-color: var(--cp-accent); }
+.btn.primary:hover { background: var(--cp-accent-hover); border-color: var(--cp-accent-hover); }
+
+.lens-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--cp-bg-elevated);
+  border-bottom: 1px solid var(--cp-border);
+}
+.lens-bar .label {
+  color: var(--cp-text-muted); font-size: 0.8rem; margin-right: 0.25rem;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.lens-btn {
+  cursor: pointer;
+  border: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.625rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+}
+.lens-btn.active {
+  background: var(--cp-accent);
+  color: var(--cp-accent-fg);
+  border-color: var(--cp-accent);
+}
+
+main { padding: 1.25rem 1.5rem 2rem; }
+
+.diagram-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+@media (max-width: 1100px) {
+  .diagram-shell { grid-template-columns: 1fr; }
+}
+
+.canvas-wrap {
+  position: relative;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  padding: 1rem;
+  overflow: hidden;
+}
+.canvas {
+  position: relative;
+  width: 100%;
+  /* internal coord space: 1100 x 760 */
+  aspect-ratio: 1100 / 760;
+  min-height: 540px;
+}
+.canvas svg.bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.plate {
+  fill: var(--cp-accent-soft);
+  stroke: var(--cp-accent);
+  stroke-dasharray: 6 4;
+  stroke-width: 1;
+  opacity: 0.55;
+}
+.plate-label {
+  font-size: 11px;
+  fill: var(--cp-accent);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: "Segoe UI", Aptos, Calibri, sans-serif;
+}
+.edge {
+  fill: none;
+  stroke: var(--cp-border-strong);
+  stroke-width: 1.6;
+}
+.edge.primary { stroke: var(--cp-accent); stroke-width: 2; }
+.edge.feedback {
+  stroke: var(--cp-warning);
+  stroke-dasharray: 5 4;
+  stroke-width: 1.6;
+}
+.edge.observe {
+  stroke: var(--cp-text-muted);
+  stroke-dasharray: 2 3;
+  stroke-width: 1.2;
+}
+.edge-label {
+  fill: var(--cp-text-muted);
+  font-size: 10.5px;
+  font-family: "Segoe UI", Aptos, Calibri, sans-serif;
+  font-weight: 500;
+}
+
+.nodes-layer { position: absolute; inset: 0; pointer-events: none; }
+.node {
+  position: absolute;
+  pointer-events: auto;
+  background: var(--cp-surface);
+  border: 1.5px solid var(--cp-border);
+  border-radius: 12px;
+  padding: 0.55rem 0.7rem;
+  box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.2s;
+  width: 180px;
+}
+.node:hover {
+  border-color: var(--cp-accent);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+}
+.node.active {
+  border-color: var(--cp-accent);
+  border-width: 2px;
+  box-shadow: 0 0 0 3px var(--cp-accent-soft), 0 4px 12px rgba(0,0,0,0.16);
+}
+.node-title {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-weight: 600; font-size: 0.86rem;
+  color: var(--cp-text);
+  margin-bottom: 0.2rem;
+}
+.node-stage {
+  color: var(--cp-text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+.node.new::after {
+  content: "NEW";
+  position: absolute;
+  top: -8px; right: -8px;
+  background: var(--cp-accent);
+  color: var(--cp-accent-fg);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+.node-icon { font-size: 1rem; }
+
+/* Lens dimming */
+body[data-lens="ai"] .node:not(.lens-ai):not(.lens-all),
+body[data-lens="ai"] .edge:not(.lens-ai):not(.lens-all),
+body[data-lens="ai"] .edge-label:not(.lens-ai):not(.lens-all),
+body[data-lens="human"] .node:not(.lens-human):not(.lens-all),
+body[data-lens="human"] .edge:not(.lens-human):not(.lens-all),
+body[data-lens="human"] .edge-label:not(.lens-human):not(.lens-all),
+body[data-lens="governance"] .node:not(.lens-governance):not(.lens-all),
+body[data-lens="governance"] .edge:not(.lens-governance):not(.lens-all),
+body[data-lens="governance"] .edge-label:not(.lens-governance):not(.lens-all),
+body[data-lens="feedback"] .node:not(.lens-feedback):not(.lens-all),
+body[data-lens="feedback"] .edge:not(.lens-feedback):not(.lens-all),
+body[data-lens="feedback"] .edge-label:not(.lens-feedback):not(.lens-all) {
+  opacity: 0.22;
+}
+body[data-lens="ai"] .plate:not(.lens-ai),
+body[data-lens="human"] .plate:not(.lens-human),
+body[data-lens="governance"] .plate:not(.lens-governance),
+body[data-lens="feedback"] .plate:not(.lens-feedback) {
+  opacity: 0.12;
+}
+
+/* legend */
+.legend {
+  display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--cp-border);
+  font-size: 0.78rem;
+  color: var(--cp-text-muted);
+}
+.legend-item { display: flex; align-items: center; gap: 0.35rem; }
+.legend-sw { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--cp-border-strong); }
+.legend-sw.primary { border-color: var(--cp-accent); }
+.legend-sw.feedback { border-style: dashed; border-color: var(--cp-warning); }
+.legend-sw.observe { border-style: dotted; border-color: var(--cp-text-muted); }
+.legend-plate {
+  display: inline-block; width: 22px; height: 12px;
+  background: var(--cp-accent-soft); border: 1px dashed var(--cp-accent);
+  border-radius: 3px;
+}
+
+/* Side panel */
+aside.detail {
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  padding: 1rem 1.1rem;
+  position: sticky; top: 4.5rem;
+  max-height: calc(100vh - 6rem);
+  overflow: auto;
+}
+aside.detail h2 { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.15rem; }
+aside.detail .stage-pill {
+  display: inline-block;
+  background: var(--cp-accent-soft);
+  color: var(--cp-accent);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+aside.detail .summary {
+  font-size: 0.92rem;
+  color: var(--cp-text);
+  margin-bottom: 0.8rem;
+}
+aside.detail h3 {
+  margin-top: 0.85rem;
+  margin-bottom: 0.3rem;
+  color: var(--cp-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+aside.detail ul { margin: 0; padding-left: 1.2rem; }
+aside.detail li { margin-bottom: 0.2rem; font-size: 0.86rem; }
+aside.detail .answers {
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--cp-accent-soft);
+  border-left: 3px solid var(--cp-accent);
+  border-radius: 0 0.625rem 0.625rem 0;
+  font-size: 0.85rem;
+}
+.tag {
+  display: inline-block;
+  background: var(--cp-surface-soft);
+  color: var(--cp-text);
+  border: 1px solid var(--cp-border);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  margin: 0.1rem 0.2rem 0.1rem 0;
+}
+.tag.accent {
+  background: var(--cp-accent-soft);
+  border-color: var(--cp-accent);
+  color: var(--cp-accent);
+}
+.tag.new {
+  background: var(--cp-accent);
+  color: var(--cp-accent-fg);
+  border-color: var(--cp-accent);
+}
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+/* Sections below */
+section.block {
+  margin-top: 1.5rem;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  padding: 1.1rem 1.25rem;
+}
+section.block h2 { margin-bottom: 0.5rem; }
+section.block .lede { color: var(--cp-text-muted); margin-bottom: 0.75rem; font-size: 0.9rem; }
+
+.missing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+.missing-card {
+  border: 1px solid var(--cp-border);
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  background: var(--cp-surface-soft);
+  position: relative;
+}
+.missing-card h3 { color: var(--cp-accent); margin-bottom: 0.3rem; font-size: 0.92rem; }
+.missing-card p { font-size: 0.85rem; color: var(--cp-text-muted); margin: 0; }
+.missing-card .new-badge {
+  position: absolute; top: -8px; right: -8px;
+  background: var(--cp-accent); color: var(--cp-accent-fg);
+  font-size: 0.62rem; font-weight: 700;
+  padding: 0.1rem 0.4rem; border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+
+table.signals {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+table.signals th, table.signals td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--cp-border);
+  vertical-align: top;
+}
+table.signals th {
+  font-weight: 600;
+  color: var(--cp-text-muted);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  background: var(--cp-surface-soft);
+}
+table.signals tr:hover td { background: var(--cp-highlight); }
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.pill.ai { background: rgba(22, 163, 74, 0.14); color: var(--cp-success); }
+.pill.human { background: var(--cp-accent-soft); color: var(--cp-accent); }
+.pill.both { background: rgba(245, 158, 11, 0.16); color: var(--cp-warning); }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.kpi {
+  border: 1px solid var(--cp-border);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  background: var(--cp-surface-soft);
+}
+.kpi .v { font-size: 1.1rem; font-weight: 600; color: var(--cp-accent); }
+.kpi .l { font-size: 0.78rem; color: var(--cp-text-muted); }
+
+footer.app {
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--cp-border);
+  color: var(--cp-text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+@media print {
+  header.app, .lens-bar, .header-actions { display: none !important; }
+  aside.detail { position: static; max-height: none; }
+  .diagram-shell { grid-template-columns: 1fr; }
+  body { background: white; }
+  .node, section.block, aside.detail, .canvas-wrap { box-shadow: none !important; }
+  .node, section.block, aside.detail, .canvas-wrap { break-inside: avoid; }
+}
+</style>
+</head>
+<body data-lens="full">
+
+<header class="app">
+  <div class="header-row">
+    <div class="brand">
+      <h1>CCS Content Lifecycle — Vision &amp; Architecture</h1>
+      <div class="sub">Connected, cyclical, AI-augmented — with explicit governance and feedback loops</div>
+      <div class="vision">
+        <strong>Vision:</strong> One unified, AI-augmented content lifecycle that turns every customer signal
+        into trusted, governed, performant content — across every CCS surface — with full end-to-end visibility
+        from idea to retirement.
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="themeToggle" title="Toggle light/dark">◐ Theme</button>
+      <button class="btn" id="printBtn" title="Print or save as PDF">🖨 Print</button>
+    </div>
+  </div>
+</header>
+
+<div class="lens-bar">
+  <span class="label">Lens</span>
+  <button class="lens-btn active" data-lens="full">Full</button>
+  <button class="lens-btn" data-lens="ai">AI augmentation</button>
+  <button class="lens-btn" data-lens="human">Human path</button>
+  <button class="lens-btn" data-lens="governance">Governance</button>
+  <button class="lens-btn" data-lens="feedback">Feedback loops</button>
+  <span style="flex:1;"></span>
+  <span class="label" style="margin: 0;">Click any node for details</span>
+</div>
+
+<main>
+
+<div class="diagram-shell">
+  <div class="canvas-wrap">
+    <div class="canvas" id="canvas">
+      <svg class="bg" viewBox="0 0 1100 760" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
+          </marker>
+          <marker id="arrSm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
+          </marker>
+        </defs>
+
+        <!-- Cross-cutting plates -->
+        <!-- Content Health: top banner -->
+        <rect class="plate lens-all" x="40" y="20" width="1020" height="32" rx="10" />
+        <text class="plate-label lens-all" x="60" y="40">Content Health · observability over inventory · freshness · quality</text>
+
+        <!-- Governance: vertical lane on right wrapping Gate -->
+        <rect class="plate lens-governance" x="685" y="70" width="270" height="240" rx="10" />
+        <text class="plate-label lens-governance" x="700" y="88">Governance plane</text>
+
+        <!-- Trust & Safety: overlay around AI path (top-center) -->
+        <rect class="plate lens-ai" x="320" y="70" width="320" height="170" rx="10" />
+        <text class="plate-label lens-ai" x="335" y="88">Trust &amp; Safety (NEW · heaviest on AI)</text>
+
+        <!-- Feedback loop plate: bottom band -->
+        <rect class="plate lens-feedback" x="40" y="500" width="1020" height="32" rx="10" />
+        <text class="plate-label lens-feedback" x="60" y="520">Feedback &amp; Continuous Improvement Loop</text>
+
+        <!-- ============ EDGES ============ -->
+        <!-- Primary clockwise flow -->
+        <!-- Idea Engine (180,160) -> Creation (500,160) -->
+        <path class="edge primary lens-all lens-ai lens-human" d="M 280 160 C 340 160, 380 160, 410 160" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-ai lens-human" x="312" y="152">prioritized backlog</text>
+
+        <!-- Creation (500,160) -> Governance Gate (820,160) -->
+        <path class="edge primary lens-all lens-ai lens-human lens-governance" d="M 590 160 C 680 160, 720 160, 740 160" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-ai lens-human lens-governance" x="610" y="152">drafts + provenance</text>
+
+        <!-- Governance Gate (820,160) -> Publishing (920,360) -->
+        <path class="edge primary lens-all lens-governance" d="M 820 200 C 870 250, 910 310, 920 330" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-governance" x="852" y="252">approved</text>
+
+        <!-- Publishing (920,360) -> Discovery (820,540) -->
+        <path class="edge primary lens-all" d="M 905 408 C 880 460, 850 510, 840 520" marker-end="url(#arr)" />
+        <text class="edge-label lens-all" x="845" y="478">live on surfaces</text>
+
+        <!-- Discovery (820,540) -> Performance (520,610) -->
+        <path class="edge primary lens-all lens-feedback" d="M 730 555 C 660 590, 600 610, 590 610" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-feedback" x="640" y="600">usage events</text>
+
+        <!-- Performance (520,610) -> Maintenance (200,560) -->
+        <path class="edge primary lens-all lens-feedback" d="M 430 610 C 350 600, 290 580, 280 575" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-feedback" x="320" y="600">refresh signal</text>
+
+        <!-- Maintenance (200,560) -> Creation (re-author) (back to Creation 500,160) -->
+        <path class="edge lens-all lens-human lens-ai" d="M 200 510 C 250 380, 380 250, 480 195" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-human lens-ai" x="240" y="370" transform="rotate(-50 240 370)">re-author → re-gate</text>
+
+        <!-- Maintenance (200,560) -> Retirement (100,360) -->
+        <path class="edge lens-all" d="M 145 510 C 115 460, 105 400, 105 395" marker-end="url(#arr)" />
+        <text class="edge-label lens-all" x="60" y="475">retire</text>
+
+        <!-- FEEDBACK arrows -->
+        <!-- Performance -> Idea Engine (gap detection) -->
+        <path class="edge feedback lens-all lens-feedback" d="M 460 580 C 380 420, 230 260, 200 200" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-feedback" x="265" y="380" transform="rotate(-58 265 380)">topic gap signal</text>
+
+        <!-- Performance -> Health observation (dotted) -->
+        <path class="edge observe lens-all" d="M 520 600 C 540 480, 550 100, 550 60" marker-end="url(#arrSm)" />
+
+        <!-- Health -> Maintenance (observation feeds backlog) -->
+        <path class="edge observe lens-all" d="M 200 60 C 200 200, 200 400, 200 510" marker-end="url(#arrSm)" />
+        <text class="edge-label lens-all" x="160" y="320" transform="rotate(-90 160 320)">freshness / quality</text>
+
+        <!-- Discovery -> Performance is part of primary; add small AI agent labeled arrow from Discovery up to Governance for audit -->
+        <path class="edge observe lens-all lens-governance" d="M 820 510 C 880 380, 900 280, 905 235" marker-end="url(#arrSm)" />
+        <text class="edge-label lens-all lens-governance" x="855" y="380" transform="rotate(-70 855 380)">live audit</text>
+
+        <!-- Retirement back to Idea Engine (signals what was retired so we don't recreate) -->
+        <path class="edge feedback lens-all lens-feedback" d="M 100 320 C 100 240, 150 190, 180 175" marker-end="url(#arr)" />
+        <text class="edge-label lens-all lens-feedback" x="40" y="260">retired-topic memory</text>
+      </svg>
+
+      <div class="nodes-layer" id="nodesLayer"></div>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-sw primary"></span> Primary flow</span>
+      <span class="legend-item"><span class="legend-sw feedback"></span> Feedback loop</span>
+      <span class="legend-item"><span class="legend-sw observe"></span> Health / governance observation</span>
+      <span class="legend-item"><span class="legend-plate"></span> Cross-cutting plane</span>
+      <span class="legend-item"><span class="tag new">NEW</span> Added pillar (not in original 6)</span>
+    </div>
+  </div>
+
+  <aside class="detail" id="detail">
+    <!-- populated by JS -->
+  </aside>
+</div>
+
+<section class="block">
+  <h2>What was missing from the original 6 pillars — and was added</h2>
+  <p class="lede">The original 6 pillars (Health, Creation, Idea Engine, Performance, Maintenance, Governance) are necessary but not sufficient for true E2E visibility. Three explicit stages and one cross-cutting plane were added.</p>
+  <div class="missing-grid">
+    <div class="missing-card">
+      <span class="new-badge">NEW</span>
+      <h3>🔍 Discovery &amp; Consumption</h3>
+      <p>The bridge between Publishing and Performance. Without modeling how customers / SEs / AI agents actually find content, Performance metrics have no story. Includes search, in-product surfacing, AI-agent citation.</p>
+    </div>
+    <div class="missing-card">
+      <span class="new-badge">NEW</span>
+      <h3>🗄️ Retirement &amp; Archival</h3>
+      <p>Originally implicit inside Maintenance. Made explicit so content has a deliberate end-of-life: redirects, archival, AI-agent index removal. Otherwise stale content lives forever.</p>
+    </div>
+    <div class="missing-card">
+      <span class="new-badge">NEW</span>
+      <h3>🛡️ Trust &amp; Safety plane</h3>
+      <p>PII redaction, hallucination detection, provenance enforcement. AI Content Creator persona introduces risks that don't exist in pure human authoring — they need their own governance plane, not buried in generic "Governance".</p>
+    </div>
+    <div class="missing-card">
+      <h3>🔄 Feedback &amp; Improvement loop</h3>
+      <p>Made an explicit cross-cutting plane. Closes the loop on every published artifact — thumbs, comments, escalations, AI-agent citation accuracy — feeding both Performance and Idea Engine.</p>
+    </div>
+    <div class="missing-card">
+      <h3>🌐 Localization &amp; Personalization</h3>
+      <p>Folded into Publishing &amp; Multi-Surface Delivery for now. Worth promoting to a stage of its own once external-customer surfaces (LMC/SMC) become primary.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <h2>Content Maintenance — what triggers updates &amp; what AI can auto-do</h2>
+  <p class="lede">Maintenance is the most ambiguous pillar in most content programs. This table makes triggers explicit, names the signal source (Health vs Performance vs Feedback), and calls out where AI can safely auto-update vs where humans must own the change.</p>
+  <table class="signals">
+    <thead>
+      <tr>
+        <th>Trigger / Signal</th>
+        <th>Source pillar</th>
+        <th>Who acts</th>
+        <th>AI auto-update?</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody id="signalsBody"></tbody>
+  </table>
+  <h3 style="margin-top: 1.2rem;">How Health &amp; Performance connect to Maintenance</h3>
+  <ul>
+    <li><strong>Health</strong> produces the <em>passive</em> backlog: freshness expirations, inventory drift, quality-score decay, owner churn.</li>
+    <li><strong>Performance</strong> produces the <em>active</em> backlog: things people are actually using badly — search failures, citation errors, deflection drops, negative feedback.</li>
+    <li>Both feed a unified <strong>Maintenance queue</strong> with the diagnostic signal attached, so the owner sees <em>why</em> the work is needed before opening the editor.</li>
+    <li>Updated content goes back through the <strong>Governance Gate</strong> — never published directly.</li>
+  </ul>
+</section>
+
+<section class="block">
+  <h2>Governance — where should it sit?</h2>
+  <p class="lede">Governance is not a single stage — it's a cross-cutting plane with three placements, in priority order:</p>
+  <ol>
+    <li><strong>Pre-publish gate (primary, highest leverage):</strong> automated checks (metadata, brand, legal, SEO, a11y, PII, provenance, dedup) + targeted human review. Single gate replaces fragmented per-surface review.</li>
+    <li><strong>Upstream standards in Creation:</strong> templates, voice rules, schema, AI-readiness baked into the authoring surface so problems are avoided, not corrected.</li>
+    <li><strong>Ongoing audits on live content:</strong> drift detection, periodic re-checks. Updated content re-enters the gate on every significant change.</li>
+  </ol>
+  <p>Trust &amp; Safety (PII, hallucination detection, provenance) is treated as a separate plane because the AI Creation path needs heavier, real-time enforcement than the human path.</p>
+</section>
+
+<section class="block">
+  <h2>North-Star KPIs (E2E)</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="v">Signal → Published</div><div class="l">Days from captured signal (case, search-fail) to live content</div></div>
+    <div class="kpi"><div class="v">Auto-pass rate</div><div class="l">% of drafts clearing the Governance Gate without manual rework</div></div>
+    <div class="kpi"><div class="v">Deflection rate</div><div class="l">% of customer / SE intents resolved by content vs needing a human</div></div>
+    <div class="kpi"><div class="v">Stale inventory %</div><div class="l">Content beyond its freshness clock without a refresh decision</div></div>
+    <div class="kpi"><div class="v">AI-draft acceptance</div><div class="l">% of AI-harvested drafts adopted by human SMEs</div></div>
+    <div class="kpi"><div class="v">Signal → Action latency</div><div class="l">Time from Performance/Health signal to a Maintenance ticket</div></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="app">
+  Vision &amp; architecture proposal · CCS Content Authoring Tool discovery · v1.0 ·
+  source of truth lives in <code>discovery/dashboard/lifecycle.html</code>
+</footer>
+
+<script>
+// ============================================================
+// Node positions (in 1100x760 viewBox coordinates) and rich data
+// ============================================================
+const NODES = [
+  { key: "idea", x: 180, y: 160, lens: ["lens-ai","lens-human","lens-feedback"],
+    icon: "💡", title: "Content Idea Engine", stage: "1 · Pre-create",
+    summary: "Where every signal becomes a prioritized content opportunity.",
+    purpose: "Turn raw signals (customer demand, support cases, search failures, trends, business strategy, AAQ gaps) into a ranked backlog of content opportunities.",
+    inputs: [
+      "Support case patterns & escalation themes",
+      "Search failures on CSS Wiki / LMC / SMC",
+      "AAQ unanswered queries",
+      "Product launches & roadmap",
+      "Customer feedback (thumbs, comments, NPS)",
+      "Business strategy & GTM priorities",
+      "Competitive & trend analysis"
+    ],
+    outputs: [
+      "Prioritized content backlog (per persona, per surface)",
+      "Intent tags, target surface, owner suggestion",
+      "Brief / acceptance criteria for each item"
+    ],
+    ai: ["Cluster cases / search-fails into themes", "Score impact vs effort", "Suggest content type + target surface", "Detect duplicates against existing inventory"],
+    human: ["Validate AI-detected themes", "Approve prioritization", "Set strategic 'must-cover' topics"],
+    owners: ["KM Lead", "PM"],
+    kpis: ["% of created content traceable to a captured signal", "Backlog age", "Signal → published time"],
+    answers: "Where does Content Idea Engine fit in the lifecycle? It's the <strong>intake stage — Step 1, BEFORE Creation</strong>. It's the funnel every downstream stage depends on for relevance. Without it, Creation becomes opinion-driven instead of signal-driven."
+  },
+  { key: "creation", x: 500, y: 160, lens: ["lens-ai","lens-human"],
+    icon: "✍️", title: "Content Creation", stage: "2 · Create",
+    summary: "AI drafts from KMA harvest + Human creators (CSS personas) author with AI assistance.",
+    purpose: "Two parallel paths in one unified authoring surface: (A) AI harvests knowledge from case-closure notes, telemetry, and internal repos to produce drafts; (B) Humans author with AI assistance — outline, next-paragraph, brand voice, accessibility suggestions.",
+    inputs: ["Prioritized backlog from Idea Engine", "Raw case-closure notes & AAQ logs (AI path)", "Existing content for reuse / extension", "Templates + brand voice rules"],
+    outputs: ["Drafts with provenance & metadata pre-filled", "Suggested reviewers and target surfaces", "Reusable atomic content blocks"],
+    ai: ["KMA harvest from case notes → draft", "Outline + next-paragraph suggestions", "Brand voice / clarity rewrites", "Auto-tag with metadata + taxonomy", "Generate accessibility-friendly variants"],
+    human: ["CSS Tech SE: in-flow KB authoring", "KM Lead: curation + extension", "Publish Manager: external content authoring", "AI Creator role: review & approve harvested drafts"],
+    owners: ["AI Content Creator", "Tech SE", "KM Lead", "Publish Manager"],
+    kpis: ["Time-to-draft", "AI-draft acceptance rate", "Content reuse %", "Author satisfaction"]
+  },
+  { key: "governance", x: 820, y: 160, lens: ["lens-governance","lens-ai","lens-human"],
+    icon: "🛡️", title: "Governance Gate", stage: "3 · Gate (pre-publish)",
+    summary: "Single pre-publish gate enforces metadata, brand, legal, SEO, accessibility, PII, and AI-readiness.",
+    purpose: "Centralized quality + compliance gate that runs automated checks AND routes targeted human review. Replaces fragmented per-surface review processes.",
+    inputs: ["Drafts from Creation", "Updated content from Maintenance"],
+    outputs: ["Approved-to-publish content (with audit trail)", "Bounced drafts with actionable feedback"],
+    ai: [
+      "Required metadata complete (owner, expiry, surface, audience, taxonomy)",
+      "Brand voice compliance",
+      "Legal / regulated-content scan",
+      "SEO basics (title, meta, schema)",
+      "Accessibility (alt text, heading order, contrast)",
+      "PII / customer-data leakage scan",
+      "AI provenance / citation completeness",
+      "Duplicate / near-duplicate detection"
+    ],
+    human: ["SME review for technical accuracy", "Legal review (when flagged)", "Brand approval (external content)"],
+    owners: ["KM Lead", "Publish Manager (governance hat)"],
+    kpis: ["Avg time-in-gate", "Auto-pass rate", "Defect escape rate", "Re-gate first-pass rate"],
+    answers: "Where should Governance be placed? <strong>Primary placement = pre-publish gate</strong> (highest leverage) + upstream standards baked into Creation + ongoing audits on live content. Maintenance always re-enters this gate — content never republishes silently."
+  },
+  { key: "publishing", x: 920, y: 360, lens: ["lens-ai","lens-human"],
+    icon: "📤", title: "Publishing & Multi-Surface Delivery", stage: "4 · Publish",
+    summary: "One source → many surfaces (CSS Wiki, Evergreen, LMC, SMC, Cornerstone AAQ) with localization.",
+    purpose: "Render approved content to the right surfaces in the right format. Maintain single source of truth; surfaces are projections, not duplicates.",
+    inputs: ["Approved content from Governance Gate"],
+    outputs: ["Live content on target surfaces", "Localized variants", "Structured snippets for AI agents (RAG-ready)"],
+    ai: ["Auto-localize to required languages", "Render to surface-specific schema (Wiki, LMC, SMC)", "Generate AI-agent-friendly structured snippets", "Versioning + redirects on republish"],
+    human: ["Publish Manager: external surface ops", "Tech SE / KM Lead: internal surface ownership"],
+    owners: ["Publish Manager", "Tech SE (internal surfaces)"],
+    kpis: ["Time-to-publish", "Surface coverage per content item", "Localization lead time"]
+  },
+  { key: "discovery", x: 820, y: 540, lens: ["lens-feedback"], isNew: true,
+    icon: "🔍", title: "Discovery & Consumption", stage: "5 · Find & Use (NEW)",
+    summary: "How customers, SEs, and AI agents actually find and use the content.",
+    purpose: "Surface content at the moment of need — through search, in-product surfacing, AI agent recommendations, proactive notifications. Without modeling this stage, performance metrics have no story.",
+    inputs: ["Published content + metadata + structured snippets"],
+    outputs: ["Usage events → Performance", "AI-agent citation logs → Performance + Trust & Safety"],
+    ai: ["Surface in case workspace based on case context", "AI-agent (Copilot, AAQ) citation", "Personalized recommendations per role"],
+    human: ["Search and browse", "Direct links from email / chat", "Reading & applying content"],
+    owners: ["Shared — Tech SE workspace + Publish Manager surfaces"],
+    kpis: ["Click-through from search", "AI-agent citation rate", "Time-to-find", "% of intents served first-try"],
+    answers: "<strong>This stage was missing from the original 6 pillars.</strong> Discovery is the bridge that makes Performance meaningful — you can't measure 'is content working' without knowing how it's reached."
+  },
+  { key: "performance", x: 500, y: 610, lens: ["lens-feedback"],
+    icon: "📈", title: "Content Performance", stage: "6 · Measure",
+    summary: "Analytics, Golden Data Sets, usage, deflection, and case-resolution impact.",
+    purpose: "Measure what works — and feed Idea Engine (gap discovery), Maintenance (update triggers), and Trust & Safety (citation accuracy).",
+    inputs: ["Usage events from Discovery", "Case resolution telemetry", "Explicit user feedback (thumbs, comments)", "AI-agent citation logs"],
+    outputs: [
+      "→ Maintenance: 'this content is underperforming'",
+      "→ Idea Engine: 'this topic is missing or under-served'",
+      "→ Health: 'this content has quality drift'",
+      "Golden Data Sets for benchmarking & model eval"
+    ],
+    ai: ["Auto-cluster usage patterns", "Detect content gaps from search-fail clusters", "Score golden-data quality", "Anomaly detection on KPI drift"],
+    human: ["PM: interpret signals → strategic moves", "Data partner: instrument & validate"],
+    owners: ["PM", "Data partner"],
+    kpis: ["% content with active perf telemetry", "Signal → action latency", "Deflection rate", "Golden Data Set coverage"]
+  },
+  { key: "maintenance", x: 200, y: 560, lens: ["lens-human","lens-ai","lens-feedback"],
+    icon: "🔧", title: "Content Maintenance", stage: "7 · Maintain",
+    summary: "Triggered by Performance + Health signals. Human + AI updates, then re-gate.",
+    purpose: "Keep content fresh, accurate, and performing. Drive the refresh loop or hand off to Retirement.",
+    inputs: ["Performance signals (underperforming, negative feedback)", "Health signals (stale, low quality, duplicate)", "Product / version changes", "Owner-initiated edits"],
+    outputs: ["Updated drafts → back through Governance Gate", "Or → Retirement decision"],
+    ai: ["Auto-fix broken links", "Auto-fix style / brand drift", "Auto-fix accessibility (alt text, heading order)", "Auto-update stale citations / version refs", "Translation re-sync", "Suggest extensions from new case patterns"],
+    human: ["Content owner: substantive rewrites", "SME: technical accuracy review", "KM Lead: dedup / merge decisions"],
+    owners: ["Content owner (varies by content type)"],
+    kpis: ["Mean time to refresh", "Stale content %", "Re-gate first-pass rate", "% of Maintenance triggered by AI vs human"],
+    answers: "<strong>What triggers updates? What can AI do?</strong> See the Maintenance Signals table below — explicit mapping of trigger → source pillar → who acts → AI safe-to-auto. Health = passive backlog, Performance = active backlog, both feed one unified queue."
+  },
+  { key: "retirement", x: 105, y: 360, lens: ["lens-governance"], isNew: true,
+    icon: "🗄️", title: "Retirement & Archival", stage: "8 · Retire (NEW)",
+    summary: "Planned sunset, archival, redirects — the deliberate end of the lifecycle.",
+    purpose: "Explicit decision to retire content (product end-of-life, duplicate consolidation, sustained low value). Preserves history, sets redirects, removes from active inventory and AI-agent indexes.",
+    inputs: ["Decision from Maintenance or governance audit", "Product EOL announcements", "Sustained low-performance signals"],
+    outputs: ["Archived content (preserved for audit / model training)", "Redirects to successor content", "Inventory + AI-agent index updates", "Retired-topic memory → Idea Engine (don't recreate)"],
+    ai: ["Detect content that should retire (sustained zero usage)", "Auto-suggest successor for redirects", "Remove from AI-agent embeddings / indexes"],
+    human: ["KM Lead: retirement decision", "Owner: optional successor authoring"],
+    owners: ["KM Lead"],
+    kpis: ["Stale inventory %", "Redirect coverage on retired content", "Retired-but-still-cited (anomaly)"],
+    answers: "<strong>This stage was missing.</strong> Retirement was implicit inside Maintenance, which let content live forever in a 'stale' state. Making it explicit means content has a deliberate end-of-life with redirects and AI-index cleanup."
+  }
+];
+
+const SIGNALS = [
+  ["Performance drop (views ↓, deflection ↓, CTR ↓)", "Performance", "Content owner", "suggest", "AI surfaces with diagnostic data; human approves edits"],
+  ["Freshness clock expired (90/180/365d)", "Health", "Content owner", "partial", "AI re-validates links + metadata; human re-confirms accuracy"],
+  ["Negative feedback spike (thumbs ↓, escalation comments)", "Feedback loop", "Content owner + PM", "no", "AI surfaces verbatim feedback; human decides response"],
+  ["Product version / API change", "Product team feed", "Tech SE / Publish Mgr", "partial", "AI auto-detects outdated version refs; human approves rewrite"],
+  ["New related case pattern emerging", "Idea Engine", "Tech SE", "suggest", "AI proposes 'extend this article' with cited cases"],
+  ["Broken links", "Health scan", "—", "yes", "AI auto-fixes (replace or remove); logs to owner"],
+  ["Style / brand drift", "Governance audits", "Publish Mgr", "yes", "AI auto-fixes; owner notified"],
+  ["Missing alt text / heading order", "Accessibility scan", "Owner", "yes", "AI auto-fixes; owner notified"],
+  ["Stale citations / version refs", "Provenance scan", "Content owner", "partial", "AI proposes update; human approves before publish"],
+  ["Translation source diverged", "Localization", "Publish Mgr", "yes", "AI re-syncs translation; flags ambiguous segments for review"],
+  ["Duplicate / near-duplicate detected", "Health", "KM Lead", "suggest", "AI proposes merge/redirect; human decides canonical"],
+  ["Owner departure", "HR feed", "KM Lead", "suggest", "AI auto-reassigns by topic ownership; human confirms"],
+  ["AI-agent citation accuracy ↓", "Performance + Trust & Safety", "Content owner + AI Creator", "no", "Wrong AI citations indicate ambiguous content — human rewrites"],
+  ["Sustained zero usage (>180d)", "Performance + Health", "KM Lead", "suggest", "AI flags retirement candidate; human decides retire vs revive"]
+];
+
+// ============================================================
+// Render nodes
+// ============================================================
+const canvas = document.getElementById("canvas");
+const layer = document.getElementById("nodesLayer");
+
+NODES.forEach(n => {
+  const d = document.createElement("div");
+  d.className = "node " + (n.lens || []).join(" ") + (n.isNew ? " new" : "");
+  d.dataset.key = n.key;
+  d.style.left = (n.x / 1100 * 100) + "%";
+  d.style.top  = (n.y / 760  * 100) + "%";
+  d.innerHTML = `
+    <div class="node-title"><span class="node-icon">${n.icon}</span><span>${n.title}</span></div>
+    <div class="node-stage">${n.stage}</div>
+  `;
+  d.addEventListener("click", () => selectNode(n.key));
+  layer.appendChild(d);
+});
+
+// ============================================================
+// Side panel
+// ============================================================
+const detail = document.getElementById("detail");
+let activeKey = null;
+
+function listHtml(arr) {
+  if (!arr || !arr.length) return "<em>—</em>";
+  return "<ul>" + arr.map(x => `<li>${x}</li>`).join("") + "</ul>";
+}
+function tags(arr, cls = "") {
+  if (!arr || !arr.length) return "";
+  return arr.map(x => `<span class="tag ${cls}">${x}</span>`).join("");
+}
+
+function selectNode(key) {
+  const n = NODES.find(x => x.key === key);
+  if (!n) return;
+  activeKey = key;
+  document.querySelectorAll(".node").forEach(el =>
+    el.classList.toggle("active", el.dataset.key === key));
+  detail.innerHTML = `
+    <span class="stage-pill">${n.stage}</span>
+    <h2><span>${n.icon}</span> ${n.title} ${n.isNew ? '<span class="tag new" style="margin-left:0.5rem;">NEW</span>' : ''}</h2>
+    <div class="summary">${n.summary}</div>
+
+    <h3>Purpose</h3>
+    <p style="font-size: 0.86rem;">${n.purpose}</p>
+
+    <div class="split2">
+      <div>
+        <h3>Inputs</h3>
+        ${listHtml(n.inputs)}
+      </div>
+      <div>
+        <h3>Outputs</h3>
+        ${listHtml(n.outputs)}
+      </div>
+    </div>
+
+    <div class="split2">
+      <div>
+        <h3>🤖 AI capabilities</h3>
+        ${listHtml(n.ai)}
+      </div>
+      <div>
+        <h3>👤 Human role</h3>
+        ${listHtml(n.human)}
+      </div>
+    </div>
+
+    <h3>Owners (personas)</h3>
+    <div>${tags(n.owners, "accent")}</div>
+
+    <h3>KPIs</h3>
+    ${listHtml(n.kpis)}
+
+    ${n.answers ? `<div class="answers">💬 ${n.answers}</div>` : ''}
+  `;
+  detail.scrollTop = 0;
+}
+
+// Pre-select Idea Engine on load
+selectNode("idea");
+
+// ============================================================
+// Signals table
+// ============================================================
+const sbody = document.getElementById("signalsBody");
+SIGNALS.forEach(row => {
+  const tr = document.createElement("tr");
+  const ai = row[3];
+  const pillClass = ai === "yes" ? "ai" : (ai === "no" ? "human" : "both");
+  const pillLabel = ai === "yes" ? "AI auto" : (ai === "no" ? "Human only" : "AI + human");
+  tr.innerHTML = `
+    <td><strong>${row[0]}</strong></td>
+    <td>${row[1]}</td>
+    <td>${row[2]}</td>
+    <td><span class="pill ${pillClass}">${pillLabel}</span></td>
+    <td style="color: var(--cp-text-muted);">${row[4]}</td>
+  `;
+  sbody.appendChild(tr);
+});
+
+// ============================================================
+// Lens toggle
+// ============================================================
+document.querySelectorAll(".lens-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".lens-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const lens = btn.dataset.lens;
+    document.body.dataset.lens = lens;
+  });
+});
+
+// ============================================================
+// Theme + print
+// ============================================================
+document.getElementById("themeToggle").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("ccs.lifecycle.theme", next);
+});
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+</script>
+
+</body>
+</html>
