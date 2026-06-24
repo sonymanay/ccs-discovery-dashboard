@@ -540,7 +540,7 @@ footer.app {
       <h1>CCS Content Lifecycle — Vision &amp; Architecture</h1>
       <div class="sub">Connected, cyclical, AI-augmented — with explicit governance and feedback loops</div>
       <div class="vision">
-        <strong>Vision:</strong> One unified, AI-augmented content lifecycle that turns every customer signal
+        <strong>Vision:</strong> One connected, AI-augmented content lifecycle that turns every customer signal
         into trusted, governed, performant content — across every CCS surface — with full end-to-end visibility
         from idea to retirement.
       </div>
@@ -707,7 +707,7 @@ footer.app {
   <ul>
     <li><strong>Health</strong> produces the <em>passive</em> backlog: freshness expirations, inventory drift, quality-score decay, owner churn.</li>
     <li><strong>Performance</strong> produces the <em>active</em> backlog: things people are actually using badly — search failures, citation errors, deflection drops, negative feedback.</li>
-    <li>Both feed a unified <strong>Maintenance queue</strong> with the diagnostic signal attached, so the owner sees <em>why</em> the work is needed before opening the editor.</li>
+    <li>Both feed a connected <strong>Maintenance queue</strong> with the diagnostic signal attached, so the owner sees <em>why</em> the work is needed before opening the editor.</li>
     <li>Updated content goes back through the <strong>Governance Gate</strong> — never published directly.</li>
   </ul>
 </section>
@@ -774,7 +774,7 @@ const NODES = [
   { key: "creation", x: 500, y: 160, lens: ["lens-ai","lens-human"],
     icon: "✍️", title: "Content Creation", stage: "2 · Create",
     summary: "AI drafts from KMA harvest + Human creators (CSS personas) author with AI assistance.",
-    purpose: "Two parallel paths in one unified authoring surface: (A) AI harvests knowledge from case-closure notes, telemetry, and internal repos to produce drafts; (B) Humans author with AI assistance — outline, next-paragraph, brand voice, accessibility suggestions.",
+    purpose: "Two parallel paths in one connected authoring surface: (A) AI harvests knowledge from case-closure notes, telemetry, and internal repos to produce drafts; (B) Humans author with AI assistance — outline, next-paragraph, brand voice, accessibility suggestions.",
     inputs: ["Prioritized backlog from Idea Engine", "Raw case-closure notes & AAQ logs (AI path)", "Existing content for reuse / extension", "Templates + brand voice rules"],
     outputs: ["Drafts with provenance & metadata pre-filled", "Suggested reviewers and target surfaces", "Reusable atomic content blocks"],
     ai: ["KMA harvest from case notes → draft", "Outline + next-paragraph suggestions", "Brand voice / clarity rewrites", "Auto-tag with metadata + taxonomy", "Generate accessibility-friendly variants"],
@@ -852,7 +852,7 @@ const NODES = [
     human: ["Content owner: substantive rewrites", "SME: technical accuracy review", "KM Lead: dedup / merge decisions"],
     owners: ["Content owner (varies by content type)"],
     kpis: ["Mean time to refresh", "Stale content %", "Re-gate first-pass rate", "% of Maintenance triggered by AI vs human"],
-    answers: "<strong>What triggers updates? What can AI do?</strong> See the Maintenance Signals table below — explicit mapping of trigger → source pillar → who acts → AI safe-to-auto. Health = passive backlog, Performance = active backlog, both feed one unified queue."
+    answers: "<strong>What triggers updates? What can AI do?</strong> See the Maintenance Signals table below — explicit mapping of trigger → source pillar → who acts → AI safe-to-auto. Health = passive backlog, Performance = active backlog, both feed one connected queue."
   },
   { key: "retirement", x: 105, y: 360, lens: ["lens-governance"],
     icon: "🗄️", title: "Retirement & Archival", stage: "8 · Retire",
